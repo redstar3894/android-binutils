@@ -1,0 +1,184 @@
+2009-08-05  Doug Kwan  <dougkwan@google.com>
+
+	Apply this fix from trunk for 2 bugs in cortex-a8 workaround.
+
+	http://sourceware.org/ml/binutils-cvs/2009-08/msg00022.html
+
+	Changed files:
+
+	bfd/elf32-arm.c
+	ld/testsuite/ld-arm/arm-elf.exp
+	
+	Added files:
+
+	ld/testsuite/ld-arm/cortex-a8-far-1.s
+	ld/testsuite/ld-arm/cortex-a8-far-2.s
+	ld/testsuite/ld-arm/cortex-a8-far.d
+
+2009-07-27  Doug Kwan  <dougkwan@google.com>
+
+	Apply this fix from trunk for linker SEGV fault.
+
+	http://sourceware.org/ml/binutils-cvs/2009-07/msg00162.html
+
+	Changed file:
+	
+	bfd/elf32-arm.c
+
+2009-06-13  Doug Kwan  <dougkwan@google.com>
+
+	Apply the following 2 patches for cortex A8 hardware wordaround
+	to fix bug in the original patch.
+
+	http://sources.redhat.com/ml/binutils-cvs/2009-07/msg00062.html
+	http://sources.redhat.com/ml/binutils-cvs/2009-07/msg00062.html
+
+	Changed file:
+
+	bfd/elf32-arm.c
+
+2009-06-26  Doug Kwan  <dougkwan@google.com>
+
+	Apply the following patches for the cortex A8 hardware workaround
+	support.
+
+	http://sourceware.org/ml/binutils-cvs/2008-10/msg00103.html
+	http://sourceware.org/ml/binutils-cvs/2008-11/msg00126.html
+	http://sourceware.org/ml/binutils-cvs/2009-02/msg00045.html
+	http://sourceware.org/ml/binutils-cvs/2009-02/msg00092.html
+	http://sourceware.org/ml/binutils-cvs/2009-02/msg00094.html
+	http://sourceware.org/ml/binutils-cvs/2009-02/msg00113.html
+	http://sourceware.org/ml/binutils-cvs/2009-02/msg00119.html
+	http://sourceware.org/ml/binutils-cvs/2009-02/msg00120.html
+	http://sourceware.org/ml/binutils-cvs/2009-02/msg00125.html
+	http://sourceware.org/ml/binutils-cvs/2009-02/msg00130.html
+	http://sourceware.org/ml/binutils-cvs/2009-02/msg00131.html
+	http://sourceware.org/ml/binutils-cvs/2009-02/msg00145.html
+	http://sourceware.org/ml/binutils-cvs/2009-03/msg00073.html
+	http://sourceware.org/ml/binutils-cvs/2009-04/msg00003.html
+	http://sourceware.org/ml/binutils-cvs/2009-04/msg00005.html
+	http://sourceware.org/ml/binutils-cvs/2009-04/msg00029.html
+	http://sourceware.org/ml/binutils-cvs/2009-04/msg00088.html
+	http://sourceware.org/ml/binutils-cvs/2009-04/msg00098.html
+	http://sourceware.org/ml/binutils-cvs/2009-04/msg00098.html
+	http://sourceware.org/ml/binutils-cvs/2009-04/msg00119.html
+	http://sourceware.org/ml/binutils-cvs/2009-04/msg00124.html
+	http://sourceware.org/ml/binutils-cvs/2009-05/msg00004.html
+	http://sourceware.org/ml/binutils-cvs/2009-05/msg00020.html
+	http://sourceware.org/ml/binutils-cvs/2009-05/msg00105.html
+	http://sourceware.org/ml/binutils-cvs/2009-06/msg00106.html
+	http://sourceware.org/ml/binutils-cvs/2009-06/msg00160.html
+
+	Changed files:
+
+	bfd/bfd-in.h
+	bfd/bfd-in2.h
+	bfd/elf32-arm.c
+	gas/config/tc-arm.c
+	gas/testsuite/gas/arm/arch6zk.d
+	gas/testsuite/gas/arm/arch6zk.s
+	gas/testsuite/gas/arm/thumb2_relax.d
+	gas/testsuite/gas/arm/thumb32.d
+	ld/emultempl/armelf.em
+	ld/ld.texinfo
+	ld/testsuite/ld-arm/arm-call.d
+	ld/testsuite/ld-arm/arm-elf.exp
+	ld/testsuite/ld-arm/arm-pic-veneer.d
+	ld/testsuite/ld-arm/farcall-arm-arm-be8.d
+	ld/testsuite/ld-arm/farcall-arm-arm-pic-veneer.d
+	ld/testsuite/ld-arm/farcall-arm-arm.d
+	ld/testsuite/ld-arm/farcall-arm-thumb-blx-pic-veneer.d
+	ld/testsuite/ld-arm/farcall-arm-thumb-blx.d
+	ld/testsuite/ld-arm/farcall-arm-thumb-pic-veneer.d
+	ld/testsuite/ld-arm/farcall-arm-thumb.d
+	ld/testsuite/ld-arm/farcall-group-size2.d
+	ld/testsuite/ld-arm/farcall-group.d
+	ld/testsuite/ld-arm/farcall-mix.d
+	ld/testsuite/ld-arm/farcall-mix2.d
+	ld/testsuite/ld-arm/farcall-thumb-arm-blx-pic-veneer.d
+	ld/testsuite/ld-arm/farcall-thumb-arm-blx.d
+	ld/testsuite/ld-arm/farcall-thumb-arm-pic-veneer.d
+	ld/testsuite/ld-arm/farcall-thumb-arm-short.d
+	ld/testsuite/ld-arm/farcall-thumb-arm.d
+	ld/testsuite/ld-arm/farcall-thumb-thumb-blx-pic-veneer.d
+	ld/testsuite/ld-arm/farcall-thumb-thumb-blx.d
+	ld/testsuite/ld-arm/farcall-thumb-thumb-m-pic-veneer.d
+	ld/testsuite/ld-arm/farcall-thumb-thumb-m.d
+	ld/testsuite/ld-arm/farcall-thumb-thumb-pic-veneer.d
+	ld/testsuite/ld-arm/farcall-thumb-thumb.d
+	ld/testsuite/ld-arm/thumb2-b-interwork.d
+	ld/testsuite/ld-arm/thumb2-bl-as-thumb1-bad-noeabi.d
+	ld/testsuite/ld-arm/thumb2-bl-as-thumb1-bad.d
+	ld/testsuite/ld-arm/thumb2-bl-as-thumb1-bad.s
+	ld/testsuite/ld-arm/thumb2-bl-bad-noeabi.d
+	ld/testsuite/ld-arm/thumb2-bl-bad.d
+
+	Added files:
+
+	gas/testsuite/gas/arm/align.d
+	gas/testsuite/gas/arm/align.s
+	ld/testsuite/ld-arm/cortex-a8-arm-target.s
+	ld/testsuite/ld-arm/cortex-a8-fix-b-rel-arm.d
+	ld/testsuite/ld-arm/cortex-a8-fix-b-rel-thumb.d
+	ld/testsuite/ld-arm/cortex-a8-fix-b-rel.s
+	ld/testsuite/ld-arm/cortex-a8-fix-b.d
+	ld/testsuite/ld-arm/cortex-a8-fix-b.s
+	ld/testsuite/ld-arm/cortex-a8-fix-bcc-rel-thumb.d
+	ld/testsuite/ld-arm/cortex-a8-fix-bcc-rel.s
+	ld/testsuite/ld-arm/cortex-a8-fix-bcc.d
+	ld/testsuite/ld-arm/cortex-a8-fix-bcc.s
+	ld/testsuite/ld-arm/cortex-a8-fix-bl-rel-arm.d
+	ld/testsuite/ld-arm/cortex-a8-fix-bl-rel-thumb.d
+	ld/testsuite/ld-arm/cortex-a8-fix-bl-rel.s
+	ld/testsuite/ld-arm/cortex-a8-fix-bl.d
+	ld/testsuite/ld-arm/cortex-a8-fix-bl.s
+	ld/testsuite/ld-arm/cortex-a8-fix-blx-rel-arm.d
+	ld/testsuite/ld-arm/cortex-a8-fix-blx-rel-thumb.d
+	ld/testsuite/ld-arm/cortex-a8-fix-blx-rel.s
+	ld/testsuite/ld-arm/cortex-a8-fix-blx.d
+	ld/testsuite/ld-arm/cortex-a8-fix-blx.s
+	ld/testsuite/ld-arm/cortex-a8-thumb-target.s
+	ld/testsuite/ld-arm/farcall-group-limit.d
+	ld/testsuite/ld-arm/farcall-group3.s
+	ld/testsuite/ld-arm/farcall-group4.s
+	ld/testsuite/ld-arm/farcall-mixed-app-v5.d
+	ld/testsuite/ld-arm/farcall-mixed-app.d
+	ld/testsuite/ld-arm/farcall-mixed-app.r
+	ld/testsuite/ld-arm/farcall-mixed-app.s
+	ld/testsuite/ld-arm/farcall-mixed-app.sym
+	ld/testsuite/ld-arm/farcall-mixed-lib.d
+	ld/testsuite/ld-arm/farcall-mixed-lib.r
+	ld/testsuite/ld-arm/farcall-mixed-lib1.s
+	ld/testsuite/ld-arm/farcall-mixed-lib2.s
+	ld/testsuite/ld-arm/farcall-thumb-arm-be8.d
+	ld/testsuite/ld-arm/thumb2-bl-undefweak.d
+	ld/testsuite/ld-arm/thumb2-bl-undefweak.s
+	ld/testsuite/ld-arm/thumb2-bl-undefweak1.d
+	ld/testsuite/ld-arm/thumb2-bl-undefweak1.s
+
+2009-05-06  Jing Yu  <jingyu@google.com>
+
+	Apply the binutils patch made in CL 28090-p2. This change adds a new
+	-save-temps option to as and makes gcc pass this option to as
+	if gcc is invoked with -save-temps. This option is ignored by as.
+
+	Changed files:
+
+	as/as.c
+
+2009-04-01  Doug Kwan  <dougkwan@google.com>
+
+        Force page size to be 4K and undefine EMBEDDED.  This change breaks
+        compatiblity with other arm-eabi platforms.  This is ported from
+	our 2.17 and is the only change required.  Other changes in 2.17
+	are already in 2.19 or unnecessary.
+
+	Changed files:
+
+	bfd/elf32-arm.c
+	ld/emulparams/armelf.sh
+
+2009-03-31  Doug Kwan  <dougkwan@google.com>
+
+	Import binutils-2.19 into android-toolchain
+	This is a stock FSF version.
