@@ -1,3 +1,13 @@
+2010-02-04  Doug Kwan  <dougkwan@google.com>
+
+	Apply this patch to fix build breakage.
+
+	http://sourceware.org/ml/binutils-cvs/2008-11/msg00063.html
+
+	Changed files:
+
+	gas/config/tc-arm.c
+
 2009-08-05  Doug Kwan  <dougkwan@google.com>
 
 	Apply this fix from trunk for 2 bugs in cortex-a8 workaround.
