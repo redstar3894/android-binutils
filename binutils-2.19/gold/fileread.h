@@ -1,6 +1,6 @@
 // fileread.h -- read files for gold   -*- C++ -*-
 
-// Copyright 2006, 2007, 2008 Free Software Foundation, Inc.
+// Copyright 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 // Written by Ian Lance Taylor <iant@google.com>.
 
 // This file is part of gold.
@@ -35,6 +35,23 @@
 namespace gold
 {
 
+// Since not all system supports stat.st_mtim and struct timespec,
+// we define our own structure and fill the nanoseconds if we can.
+
+struct Timespec
+{
+  Timespec()
+    : seconds(0), nanoseconds(0)
+  { }
+
+  Timespec(time_t a_seconds, int a_nanoseconds)
+    : seconds(a_seconds), nanoseconds(a_nanoseconds)
+  { }
+
+  time_t seconds;
+  int nanoseconds;
+};
+
 class Position_dependent_options;
 class Input_file_argument;
 class Dirsearch;
@@ -48,8 +65,8 @@ class File_read
  public:
   File_read()
     : name_(), descriptor_(-1), is_descriptor_opened_(false), object_count_(0),
-      size_(0), token_(false), views_(), saved_views_(), contents_(NULL),
-      mapped_bytes_(0), released_(true)
+      size_(0), token_(false), views_(), saved_views_(), mapped_bytes_(0),
+      released_(true), whole_file_view_(NULL)
   { }
 
   ~File_read();
@@ -183,31 +200,56 @@ class File_read
   static void
   print_stats();
 
+  // Return the open file descriptor (for plugins).
+  int
+  descriptor()
+  {
+    this->reopen_descriptor();
+    return this->descriptor_;
+  }
+  
+  // Return the file last modification time.  Calls gold_fatal if the stat
+  // system call failed.
+  Timespec
+  get_mtime();
+
  private:
   // This class may not be copied.
   File_read(const File_read&);
   File_read& operator=(const File_read&);
 
-  // Total bytes mapped into memory during the link.  This variable
-  // may not be accurate when running multi-threaded.
+  // Total bytes mapped into memory during the link if --stats.
   static unsigned long long total_mapped_bytes;
 
-  // Current number of bytes mapped into memory during the link.  This
-  // variable may not be accurate when running multi-threaded.
+  // Current number of bytes mapped into memory during the link if
+  // --stats.
   static unsigned long long current_mapped_bytes;
 
-  // High water mark of bytes mapped into memory during the link.
-  // This variable may not be accurate when running multi-threaded.
+  // High water mark of bytes mapped into memory during the link if
+  // --stats.
   static unsigned long long maximum_mapped_bytes;
 
   // A view into the file.
   class View
   {
    public:
+    // Specifies how to dispose the data on destruction of the view.
+    enum Data_ownership
+    {
+      // Data owned by File object - nothing done in destructor.
+      DATA_NOT_OWNED,
+      // Data alocated with new[] and owned by this object - should
+      // use delete[].
+      DATA_ALLOCATED_ARRAY,
+      // Data mmapped and owned by this object - should munmap.
+      DATA_MMAPPED
+    };
+
     View(off_t start, section_size_type size, const unsigned char* data,
-	 unsigned int byteshift, bool cache, bool mapped)
+	 unsigned int byteshift, bool cache, Data_ownership data_ownership)
       : start_(start), size_(size), data_(data), lock_count_(0),
-	byteshift_(byteshift), cache_(cache), mapped_(mapped), accessed_(true)
+	byteshift_(byteshift), cache_(cache), data_ownership_(data_ownership),
+	accessed_(true)
     { }
 
     ~View();
@@ -281,7 +323,7 @@ class File_read
     bool cache_;
     // Whether the view is mapped into memory.  If not, data_ points
     // to memory allocated using new[].
-    bool mapped_;
+    Data_ownership data_ownership_;
     // Whether the view has been accessed recently.
     bool accessed_;
   };
@@ -340,7 +382,13 @@ class File_read
   { return (file_size + (page_size - 1)) & ~ (page_size - 1); }
 
   // The maximum number of entries we will pass to ::readv.
+#ifdef HAVE_READV
   static const size_t max_readv_entries = 128;
+#else
+  // On targets that don't have readv set the max to 1 so readv is not
+  // used.
+  static const size_t max_readv_entries = 1;
+#endif
 
   // Use readv to read data.
   void
@@ -364,14 +412,18 @@ class File_read
   // List of views which were locked but had to be removed from views_
   // because they were not large enough.
   Saved_views saved_views_;
-  // Specified file contents.  Used only for testing purposes.
-  const unsigned char* contents_;
   // Total amount of space mapped into memory.  This is only changed
   // while the file is locked.  When we unlock the file, we transfer
   // the total to total_mapped_bytes, and reset this to zero.
   size_t mapped_bytes_;
   // Whether the file was released.
   bool released_;
+  // A view containing the whole file.  May be NULL if we mmap only
+  // the relevant parts of the file.  Not NULL if:
+  // - Flag --mmap_whole_files is set (default on 64-bit hosts).
+  // - The contents was specified in the constructor.  Used only for
+  //   testing purposes).
+  View* whole_file_view_;
 };
 
 // A view of file data that persists even when the file is unlocked.
@@ -412,9 +464,16 @@ class File_view
 class Input_file
 {
  public:
+  enum Format
+  {
+    FORMAT_NONE,
+    FORMAT_ELF,
+    FORMAT_BINARY
+  };
+
   Input_file(const Input_file_argument* input_argument)
     : input_argument_(input_argument), found_name_(), file_(),
-      is_in_sysroot_(false)
+      is_in_sysroot_(false), format_(FORMAT_NONE)
   { }
 
   // Create an input file with the contents already provided.  This is
@@ -423,10 +482,23 @@ class Input_file
   Input_file(const Task*, const char* name, const unsigned char* contents,
 	     off_t size);
 
-  // Open the file.  If the open fails, this will report an error and
-  // return false.
+  // Return the command line argument.
+  const Input_file_argument*
+  input_file_argument() const
+  { return this->input_argument_; }
+
+  // Return whether this is a file that we will search for in the list
+  // of directories.
   bool
-  open(const General_options&, const Dirsearch&, const Task*);
+  will_search_for() const;
+
+  // Open the file.  If the open fails, this will report an error and
+  // return false.  If there is a search, it starts at directory
+  // *PINDEX.  *PINDEX should be initialized to zero.  It may be
+  // restarted to find the next file with a matching name by
+  // incrementing the result and calling this again.
+  bool
+  open(const Dirsearch&, const Task*, int *pindex);
 
   // Return the name given by the user.  For -lc this will return "c".
   const char*
@@ -463,9 +535,18 @@ class Input_file
   is_in_sysroot() const
   { return this->is_in_sysroot_; }
 
+  // Whether this file is in a system directory.
+  bool
+  is_in_system_directory() const;
+
   // Return whether this file is to be read only for its symbols.
   bool
   just_symbols() const;
+
+  // Return the format of the unconverted input file.
+  Format
+  format() const
+  { return this->format_; }
 
  private:
   Input_file(const Input_file&);
@@ -473,8 +554,7 @@ class Input_file
 
   // Open a binary file.
   bool
-  open_binary(const General_options&, const Task* task,
-	      const std::string& name);
+  open_binary(const Task* task, const std::string& name);
 
   // The argument from the command line.
   const Input_file_argument* input_argument_;
@@ -487,6 +567,8 @@ class Input_file
   File_read file_;
   // Whether we found the file in a directory in the system root.
   bool is_in_sysroot_;
+  // Format of unconverted input file.
+  Format format_;
 };
 
 } // end namespace gold

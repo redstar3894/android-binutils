@@ -311,6 +311,8 @@ extern void *xmemdup (const void *, size_t, size_t) ATTRIBUTE_MALLOC;
 extern double physmem_total (void);
 extern double physmem_available (void);
 
+/* Compute the 32-bit CRC of a block of memory.  */
+extern unsigned int xcrc32 (const unsigned char *, int, unsigned int);
 
 /* These macros provide a K&R/C89/C++-friendly way of allocating structures
    with nice encapsulation.  The XDELETE*() macros are technically

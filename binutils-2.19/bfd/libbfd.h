@@ -1256,6 +1256,7 @@ static const char *const bfd_reloc_code_real_names[] = { "@@uninitialized@@",
   "BFD_RELOC_ARM_RELATIVE",
   "BFD_RELOC_ARM_GOTOFF",
   "BFD_RELOC_ARM_GOTPC",
+  "BFD_RELOC_ARM_GOT_PREL",
   "BFD_RELOC_ARM_TLS_GD32",
   "BFD_RELOC_ARM_TLS_LDO32",
   "BFD_RELOC_ARM_TLS_LDM32",
@@ -2052,4 +2053,3 @@ bfd_boolean bfd_default_scan
 
 /* Extracted from elf.c.  */
 struct elf_internal_shdr *bfd_elf_find_section (bfd *abfd, char *name);
-

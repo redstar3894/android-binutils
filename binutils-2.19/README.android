@@ -1,3 +1,336 @@
+2010-04-09  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream patch to add support for NOLOAD section type in
+	script.
+
+	http://sourceware.org/ml/binutils-cvs/2010-04/msg00050.html
+
+	Changed files:
+	gold/layout.cc
+	gold/layout.h
+	gold/output.cc
+	gold/output.h
+	gold/script-c.h
+	gold/script-sections.cc
+	gold/script-sections.h
+	gold/script.cc
+	gold/yyscript.y
+	
+2010-04-08  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream patch to fix a problem in handling merge sections
+	of uneven sizes.
+
+	http://sourceware.org/ml/binutils-cvs/2010-04/msg00047.html
+	
+	Changed files:
+	gold/merge.cc
+	gold/output.cc
+
+2010-04-08  Doug Kwan  <dougkwan@google.com>
+
+	Backport patch from trunk to fix handling of objects with more than
+	64K sections.
+
+	http://sourceware.org/ml/binutils-cvs/2010-04/msg00044.html
+
+	Changed files:
+	
+	gold/arm.cc
+
+2010-04-08  Doug Kwan  <dougkwan@google.com>
+
+	Backport patch from trunk to fix some of the kernel build problems.
+
+	http://sourceware.org/ml/binutils-cvs/2010-04/msg00039.html
+
+	Changed files:
+
+	gold/ChangeLog
+	gold/arm.cc
+	gold/gold.cc
+	gold/options.cc
+	gold/options.h
+	gold/parameters.cc
+	gold/parameters.h
+	gold/target.h
+
+2010-03-30  Jing Yu  <jingyu@google.com>
+
+	Backport patch from 2.20 to fix the misalignment problem.
+	The patch increases the maximum allowed code alignment from 32
+	to 64 bytes, affecting .p2align and .align directives.
+
+	http://sourceware.org/ml/binutils/2009-06/msg00289.html
+
+	Changed files:
+
+	gas/config/tc-arm.c
+	gas/config/tc-arm.h
+
+2010-03-25  Doug Kwan  <dougkwan@google.com>
+
+	Backport patch from trunk to fix build breakage due to a
+	conversion warning on a 32-bit host.
+
+	http://sourceware.org/ml/binutils-cvs/2010-03/msg00145.html
+
+	Changed files:
+
+	gold/arm.cc
+
+2010-03-22  Doug Kwan  <dougkwan@google.com>
+
+	Backport patch from trunk to fix handling of BLX branch offsets.
+
+	http://sourceware.org/ml/binutils-cvs/2010-03/msg00116.html
+
+	Changed files:
+
+	gold/arm.cc
+	gold/testsuite/Makefile.am
+	gold/testsuite/Makefile.in
+	gold/testsuite/arm_branch_in_range.sh
+
+	Added files:
+
+	gold/testsuite/thumb_blx_in_range.s
+	gold/testsuite/thumb_blx_out_of_range.s
+
+2010-03-19  Doug Kwan  <dougkwan@google.com>
+
+	Backport patch from trunk to make stub offsets independent of
+	unordered map implementation.
+
+	http://sourceware.org/ml/binutils-cvs/2010-03/msg00104.html
+
+	Changed files:
+
+	gold/arm.cc
+	gold/stringpool.cc
+	gold/stringpool.h
+
+2010-03-19  Carrot Wei  <carrot@google.com>
+
+        Back port patch from trunk:
+
+        http://sourceware.org/ml/binutils-cvs/2010-03/msg00091.html
+
+        Changed files:
+
+        bfd/elf32-arm.c
+        bfd/reloc.c
+        bfd/bfd-in2.h
+        bfd/libbfd.h
+        gas/config/tc-arm.c
+        gas/doc/c-arm.texi
+
+        Added files:
+
+        gas/testsuite/gas/arm/got_prel.d
+        gas/testsuite/gas/arm/got_prel.s
+
+2010-03-16  Doug Kwan  <dougkwan@google.com>
+
+	Back port patch from trunk:
+
+	http://sourceware.org/ml/binutils-cvs/2010-03/msg00074.html
+
+	Changed files:
+
+	gold/stringpool.cc
+	gold/stringpool.h
+
+2010-03-11  Doug Kwan  <dougkwan@google.com>
+
+	Add missing files in top-of-trunk sync on 2010-03-01.
+
+	Added files:
+
+	gold/ffsll.c
+	gold/ftruncate.c
+	gold/mremap.c
+	
+2010-03-08  Doug Kwan  <dougkwan@google.com>
+
+	Back port patches from trunk:
+
+	http://sourceware.org/ml/binutils-cvs/2010-03/msg00036.html
+	http://sourceware.org/ml/binutils-cvs/2010-03/msg00018.html
+
+	Changed files:
+
+	gold/arm.cc
+	gold/object.cc
+	gold/object.h
+	gold/target-reloc.h
+	gold/testsuite/Makefile.am
+	gold/testsuite/Makefile.in
+	gold/testsuite/discard_locals_test.sh
+	gold/testsuite/discard_locals_relocatable_test.c
+
+2010-03-01  Doug Kwan  <dougkwan@google.com>
+
+	Sync gold the top of trunk version:
+
+	http://sourceware.org/ml/binutils-cvs/2010-03/msg00002.html
+
+	All the files in src/elfcpp and src/gold are now at the same revision
+	as the commit above.
+
+	Changed files:
+
+	configure
+	configure.ac
+	elfcpp/ChangeLog
+	elfcpp/elfcpp.h
+	elfcpp/elfcpp_file.h
+	elfcpp/elfcpp_swap.h
+	gold/ChangeLog
+	gold/Makefile.am
+	gold/Makefile.in
+	gold/README
+	gold/aclocal.m4
+	gold/archive.cc
+	gold/archive.h
+	gold/binary.cc
+	gold/common.cc
+	gold/common.h
+	gold/config.in
+	gold/configure
+	gold/configure.ac
+	gold/configure.tgt
+	gold/copy-relocs.cc
+	gold/cref.cc
+	gold/cref.h
+	gold/debug.h
+	gold/defstd.cc
+	gold/descriptors.cc
+	gold/descriptors.h
+	gold/dirsearch.cc
+	gold/dirsearch.h
+	gold/dwarf_reader.cc
+	gold/dwarf_reader.h
+	gold/dynobj.cc
+	gold/dynobj.h
+	gold/errors.cc
+	gold/errors.h
+	gold/expression.cc
+	gold/fileread.cc
+	gold/fileread.h
+	gold/gold-threads.cc
+	gold/gold-threads.h
+	gold/gold.cc
+	gold/gold.h
+	gold/i386.cc
+	gold/layout.cc
+	gold/layout.h
+	gold/main.cc
+	gold/mapfile.cc
+	gold/mapfile.h
+	gold/merge.cc
+	gold/merge.h
+	gold/object.cc
+	gold/object.h
+	gold/options.cc
+	gold/options.h
+	gold/output.cc
+	gold/output.h
+	gold/parameters.cc
+	gold/parameters.h
+	gold/po/Make-in
+	gold/powerpc.cc
+	gold/pread.c
+	gold/readsyms.cc
+	gold/readsyms.h
+	gold/reduced_debug_output.cc
+	gold/reduced_debug_output.h
+	gold/reloc.cc
+	gold/reloc.h
+	gold/resolve.cc
+	gold/script-c.h
+	gold/script-sections.cc
+	gold/script-sections.h
+	gold/script.cc
+	gold/script.h
+	gold/sparc.cc
+	gold/stringpool.cc
+	gold/stringpool.h
+	gold/symtab.cc
+	gold/symtab.h
+	gold/target-reloc.h
+	gold/target-select.cc
+	gold/target-select.h
+	gold/target.h
+	gold/testsuite/Makefile.am
+	gold/testsuite/Makefile.in
+	gold/testsuite/binary_unittest.cc
+	gold/testsuite/debug_msg.sh
+	gold/testsuite/initpri1.c
+	gold/testsuite/object_unittest.cc
+	gold/testsuite/relro_script_test.t
+	gold/testsuite/script_test_3.sh
+	gold/testsuite/script_test_4.sh
+	gold/testsuite/testfile.cc
+	gold/testsuite/tls_test_c.c
+	gold/testsuite/undef_symbol.sh
+	gold/testsuite/ver_matching_test.sh
+	gold/testsuite/ver_test_10.sh
+	gold/testsuite/ver_test_2.sh
+	gold/testsuite/ver_test_4.script
+	gold/testsuite/ver_test_4.sh
+	gold/testsuite/ver_test_5.sh
+	gold/testsuite/ver_test_6.c
+	gold/testsuite/ver_test_7.sh
+	gold/testsuite/version_script.map
+	gold/testsuite/weak_plt.sh
+	gold/token.h
+	gold/version.cc
+	gold/workqueue.cc
+	gold/workqueue.h
+	gold/x86_64.cc
+	gold/yyscript.y
+	include/libiberty.h
+	libiberty/Makefile.in
+	libiberty/configure
+	libiberty/configure.ac
+	libiberty/functions.texi
+
+	Added files:
+
+	elfcpp/arm.h
+	gold/testsuite/arm_abs_global.sh
+	gold/testsuite/arm_branch_in_range.sh
+	gold/testsuite/arm_fix_v4bx.sh
+	gold/testsuite/discard_locals_test.sh
+	gold/testsuite/dynamic_list.sh
+	gold/testsuite/exclude_libs_test.sh
+	gold/testsuite/gc_comdat_test.sh
+	gold/testsuite/gc_orphan_section_test.sh
+	gold/testsuite/gc_tls_test.sh
+	gold/testsuite/hidden_test.sh
+	gold/testsuite/icf_keep_unique_test.sh
+	gold/testsuite/icf_safe_so_test.sh
+	gold/testsuite/icf_safe_test.sh
+	gold/testsuite/icf_test.sh
+	gold/testsuite/incremental_test.sh
+	gold/testsuite/no_version_test.sh
+	gold/testsuite/plugin_test_1.sh
+	gold/testsuite/plugin_test_2.sh
+	gold/testsuite/plugin_test_3.sh
+	gold/testsuite/plugin_test_4.sh
+	gold/testsuite/retain_symbols_file_test.sh
+	gold/testsuite/script_test_5.sh
+	gold/testsuite/script_test_6.sh
+	gold/testsuite/script_test_7.sh
+	gold/testsuite/script_test_8.sh
+	gold/testsuite/split_i386.sh
+	gold/testsuite/split_x86_64.sh
+	gold/testsuite/two_file_shared.sh
+	gold/testsuite/ver_test_1.sh
+	include/plugin-api.h
+	libiberty/crc32.c
+	libiberty/memmem.c
 2010-02-04  Doug Kwan  <dougkwan@google.com>
 
 	Apply this patch to fix build breakage.

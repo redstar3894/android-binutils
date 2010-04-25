@@ -2860,6 +2860,8 @@ ENUMX
   BFD_RELOC_ARM_GOTOFF
 ENUMX
   BFD_RELOC_ARM_GOTPC
+ENUMX
+  BFD_RELOC_ARM_GOT_PREL
 ENUMDOC
   Relocations for setting up GOTs and PLTs for shared libraries.
 

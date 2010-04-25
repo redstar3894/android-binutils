@@ -1,6 +1,6 @@
 // copy-relocs.cc -- handle COPY relocations for gold.
 
-// Copyright 2006, 2007, 2008 Free Software Foundation, Inc.
+// Copyright 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 // Written by Ian Lance Taylor <iant@google.com>.
 
 // This file is part of gold.
@@ -84,7 +84,8 @@ Copy_relocs<sh_type, size, big_endian>::need_copy_reloc(
     Sized_relobj<size, big_endian>* object,
     unsigned int shndx) const
 {
-  // FIXME: Handle -z nocopyrelocs.
+  if (!parameters->options().copyreloc())
+    return false;
 
   if (sym->symsize() == 0)
     return false;
@@ -109,6 +110,9 @@ Copy_relocs<sh_type, size, big_endian>::emit_copy_reloc(
     Sized_symbol<size>* sym,
     Output_data_reloc<sh_type, true, size, big_endian>* reloc_section)
 {
+  // We should not be here if -z nocopyreloc is given.
+  gold_assert(parameters->options().copyreloc());
+
   typename elfcpp::Elf_types<size>::Elf_WXword symsize = sym->symsize();
 
   // There is no defined way to determine the required alignment of
@@ -128,13 +132,17 @@ Copy_relocs<sh_type, size, big_endian>::emit_copy_reloc(
   while ((value & (addralign - 1)) != 0)
     addralign >>= 1;
 
+  // Mark the dynamic object as needed for the --as-needed option.
+  sym->object()->set_is_needed();
+
   if (this->dynbss_ == NULL)
     {
       this->dynbss_ = new Output_data_space(addralign, "** dynbss");
       layout->add_output_section_data(".bss",
 				      elfcpp::SHT_NOBITS,
 				      elfcpp::SHF_ALLOC | elfcpp::SHF_WRITE,
-				      this->dynbss_);
+				      this->dynbss_, false, false, false,
+				      false);
     }
 
   Output_data_space* dynbss = this->dynbss_;

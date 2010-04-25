@@ -53,6 +53,20 @@ if test "$threads" = "yes"; then
 fi
 AM_CONDITIONAL(THREADS, test "$threads" = "yes")
 
+AC_ARG_ENABLE([plugins],
+[  --enable-plugins        linker plugins],
+[case "${enableval}" in
+  yes | "") plugins=yes ;;
+  no) plugins=no ;;
+  *) plugins=yes ;;
+ esac],
+[plugins=no])
+if test "$plugins" = "yes"; then
+  AC_DEFINE(ENABLE_PLUGINS, 1,
+	    [Define to enable linker plugins])
+fi
+AM_CONDITIONAL(PLUGINS, test "$plugins" = "yes")
+
 AC_ARG_ENABLE([targets],
 [  --enable-targets        alternative target configurations],
 [case "${enableval}" in
@@ -89,6 +103,7 @@ all_targets=
 default_machine=
 default_size=
 default_big_endian=
+default_osabi=ELFOSABI_NONE
 targ_32_little=
 targ_32_big=
 targ_64_little=
@@ -135,10 +150,27 @@ for targ in $target $canon_targets; do
         default_machine=$targ_machine
 	default_size=$targ_size
 	default_big_endian=$targ_big_endian
+	default_osabi=$targ_osabi
+
+	AM_CONDITIONAL(DEFAULT_TARGET_ARM, test "$targ_obj" = "arm")
+	AM_CONDITIONAL(DEFAULT_TARGET_I386, test "$targ_obj" = "i386")
+	AM_CONDITIONAL(DEFAULT_TARGET_POWERPC, test "$targ_obj" = "powerpc")
+	AM_CONDITIONAL(DEFAULT_TARGET_SPARC, test "$targ_obj" = "sparc")
+	AM_CONDITIONAL(DEFAULT_TARGET_X86_64, test "$targ_obj" = "x86_64")
       fi
     fi
   fi
 done
+
+# Remove any duplicates.
+to=""
+for t in $targetobjs; do
+  case " $to " in
+  *" $t "*) ;;
+  *) to="$to $t" ;;
+  esac
+done
+targetobjs=$to
 
 if test -n "$targ_32_little"; then
   AC_DEFINE(HAVE_TARGET_32_LITTLE, 1,
@@ -170,6 +202,8 @@ AC_DEFINE_UNQUOTED(GOLD_DEFAULT_SIZE, $default_size,
 		   [Default size (32 or 64)])
 AC_DEFINE_UNQUOTED(GOLD_DEFAULT_BIG_ENDIAN, $default_big_endian,
 		   [Default big endian (true or false)])
+AC_DEFINE_UNQUOTED(GOLD_DEFAULT_OSABI, $default_osabi,
+		   [Default OSABI code])
 
 AC_PROG_CC
 AC_PROG_CXX
@@ -202,6 +236,21 @@ AM_CONDITIONAL(FN_PTRS_IN_SO_WITHOUT_PIC, [
     sparc64) false;;
     *) true;;
   esac])
+
+dnl Test for gcc 4.1 or later.  Full support for -mcmodel=medium is
+dnl only available in gcc 4.1.
+AC_CACHE_CHECK([for gcc >= 4.1], [gold_cv_prog_gcc41],
+[AC_COMPILE_IFELSE([
+#if !defined __GNUC__
+error
+#elif __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 1)
+error
+#endif
+], [gold_cv_prog_gcc41=yes], [gold_cv_prog_gcc41=no])])
+
+dnl Whether we can test -mcmodel=medium.
+AM_CONDITIONAL(MCMODEL_MEDIUM,
+[test "$target_cpu" = "x86_64" -a "$gold_cv_prog_gcc41" = "yes"])
 
 dnl Test for __thread support.
 AC_CACHE_CHECK([for thread support], [gold_cv_c_thread],
@@ -248,18 +297,18 @@ CFLAGS="$save_CFLAGS"
 AM_CONDITIONAL(TLS_GNU2_DIALECT, test "$have_tls_gnu2" = "yes")
 
 dnl On GNU/Linux TLS descriptors are supported by the dynamic loader
-dnl only with glibc 2.5 or later.
-AC_CACHE_CHECK([for glibc >= 2.5], [gold_cv_lib_glibc25],
+dnl only with glibc 2.9 or later.
+AC_CACHE_CHECK([for glibc >= 2.9], [gold_cv_lib_glibc29],
 [AC_COMPILE_IFELSE([
 #include <features.h>
 #if !defined __GLIBC__
 error
-#elif __GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 5)
+#elif __GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 9)
 error
 #endif
-], [gold_cv_lib_glibc25=yes], [gold_cv_lib_glibc25=no])])
+], [gold_cv_lib_glibc29=yes], [gold_cv_lib_glibc29=no])])
 
-AM_CONDITIONAL(TLS_DESCRIPTORS, test "$gold_cv_lib_glibc25" = "yes")
+AM_CONDITIONAL(TLS_DESCRIPTORS, test "$gold_cv_lib_glibc29" = "yes")
 
 dnl Check whether the compiler supports constructor priorities in
 dnl attributes, which were added in gcc 4.3.
@@ -285,7 +334,7 @@ AC_SUBST(RANDOM_SEED_CFLAGS)
 
 AM_BINUTILS_WARNINGS
 
-WARN_CXXFLAGS=`echo ${WARN_CFLAGS} | sed -e 's/-Wstrict-prototypes//' -e 's/-Wmissing-prototypes//'`
+WARN_CXXFLAGS=`echo ${WARN_CFLAGS} | sed -e 's/-Wstrict-prototypes//' -e 's/-Wmissing-prototypes//' -e 's/-Wshadow//'`
 AC_SUBST(WARN_CXXFLAGS)
 
 dnl Force support for large files by default.  This may need to be
@@ -293,17 +342,39 @@ dnl host dependent.  If build == host, we can check getconf LFS_CFLAGS.
 LFS_CFLAGS="-D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64"
 AC_SUBST(LFS_CFLAGS)
 
-AC_REPLACE_FUNCS(pread)
+AC_CHECK_FUNCS(chsize)
+AC_REPLACE_FUNCS(pread ftruncate mremap ffsll)
 
 # Link in zlib if we can.  This allows us to write compressed sections.
 AC_SEARCH_LIBS(zlibVersion, z, [AC_CHECK_HEADERS(zlib.h)])
 AM_CONDITIONAL(HAVE_ZLIB, test "$ac_cv_search_zlibVersion" != "no")
 
+dnl We have to check these in C, not C++, because autoconf generates
+dnl tests which have no type information, and current glibc provides
+dnl multiple declarations of functions like basename when compiling
+dnl with C++.
+AC_CHECK_DECLS([basename, ffs, asprintf, vasprintf, snprintf, vsnprintf, strverscmp])
+
 AC_LANG_PUSH(C++)
 
 AC_CHECK_HEADERS(tr1/unordered_set tr1/unordered_map)
 AC_CHECK_HEADERS(ext/hash_map ext/hash_set)
-AC_CHECK_FUNCS(mallinfo)
+AC_CHECK_HEADERS(byteswap.h)
+AC_CHECK_FUNCS(mallinfo posix_fallocate readv sysconf times)
+AC_CHECK_DECLS([basename, ffs, asprintf, vasprintf, snprintf, vsnprintf, strverscmp, strndup, memmem])
+
+# Use of ::std::tr1::unordered_map::rehash causes undefined symbols
+# at link time with some versions of GCC.
+AC_CACHE_CHECK([whether ::std::tr1::unordered_map::rehash is usable.],
+[gold_cv_unordered_map_rehash],
+[AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <tr1/unordered_map>
+void bar() { ::std::tr1::unordered_map<int, int> x; x.rehash(10); }
+]])], [gold_cv_unordered_map_rehash=yes], [gold_cv_unordered_map_rehash=no])])
+if test "$gold_cv_unordered_map_rehash" = "yes"; then
+  AC_DEFINE(HAVE_TR1_UNORDERED_MAP_REHASH, 1,
+	    [Define if ::std::tr1::unordered_map::rehash is usable])
+fi
 
 # gcc 4.3.0 doesn't recognize the printf attribute on a template
 # function.  Check for that.  This is gcc bug 35546.  This test can
@@ -319,6 +390,18 @@ void bar() { foo<int>("%s\n", "foo"); }
 if test "$gold_cv_template_attribute" = "yes"; then
   AC_DEFINE(HAVE_TEMPLATE_ATTRIBUTES, 1,
 	    [Define if attributes work on C++ templates])
+fi
+
+dnl Check if the system has struct stat::st_mtim.
+AC_CACHE_CHECK([for struct stat::st_mtim.],
+[gold_cv_stat_st_mtim],
+[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <sys/stat.h>
+long bar() { struct stat s; return (long)(s.st_mtim.tv_sec + s.st_mtim.tv_sec);}
+]])], [gold_cv_stat_st_mtim=yes], [gold_cv_stat_st_mtim=no])])
+if test "$gold_cv_stat_st_mtim" = "yes"; then
+  AC_DEFINE(HAVE_STAT_ST_MTIM, 1,
+	    [Define if struct stat has a field st_mtim with timespec for mtime])
 fi
 
 AC_LANG_POP(C++)

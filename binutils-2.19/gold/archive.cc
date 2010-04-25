@@ -1,6 +1,6 @@
 // archive.cc -- archive support for gold
 
-// Copyright 2006, 2007, 2008 Free Software Foundation, Inc.
+// Copyright 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 // Written by Ian Lance Taylor <iant@google.com>.
 
 // This file is part of gold.
@@ -37,6 +37,7 @@
 #include "symtab.h"
 #include "object.h"
 #include "archive.h"
+#include "plugin.h"
 
 namespace gold
 {
@@ -82,11 +83,22 @@ const char Archive::armagt[sarmag] =
 
 const char Archive::arfmag[2] = { '`', '\n' };
 
+Archive::Archive(const std::string& name, Input_file* input_file,
+                 bool is_thin_archive, Dirsearch* dirpath, Task* task)
+  : name_(name), input_file_(input_file), armap_(), armap_names_(),
+    extended_names_(), armap_checked_(), seen_offsets_(), members_(),
+    is_thin_archive_(is_thin_archive), included_member_(false),
+    nested_archives_(), dirpath_(dirpath), task_(task), num_members_(0)
+{
+  this->no_export_ =
+    parameters->options().check_excluded_libs(input_file->found_name());
+}
+
 // Set up the archive: read the symbol map and the extended name
 // table.
 
 void
-Archive::setup(Input_objects* input_objects)
+Archive::setup()
 {
   // We need to ignore empty archives.
   if (this->input_file_->file().filesize() == sarmag)
@@ -126,9 +138,12 @@ Archive::setup(Input_objects* input_objects)
                        && parameters->options().preread_archive_symbols());
 #ifndef ENABLE_THREADS
   preread_syms = false;
+#else
+  if (parameters->options().has_plugins())
+    preread_syms = false;
 #endif
   if (preread_syms)
-    this->read_all_symbols(input_objects);
+    this->read_all_symbols();
 }
 
 // Unlock any nested archives.
@@ -260,7 +275,8 @@ Archive::interpret_header(const Archive_header* hdr, off_t off,
   else if (hdr->ar_name[1] == ' ')
     {
       // This is the symbol table.
-      pname->clear();
+      if (!pname->empty())
+	pname->clear();
     }
   else if (hdr->ar_name[1] == '/')
     {
@@ -437,13 +453,12 @@ Archive::end()
 // to the name of the archive member.  Return TRUE on success.
 
 bool
-Archive::get_file_and_offset(off_t off, Input_objects* input_objects,
-                             Input_file** input_file, off_t* memoff,
-                             std::string* member_name)
+Archive::get_file_and_offset(off_t off, Input_file** input_file, off_t* memoff,
+                             off_t* memsize, std::string* member_name)
 {
   off_t nested_off;
 
-  this->read_header(off, false, member_name, &nested_off);
+  *memsize = this->read_header(off, false, member_name, &nested_off);
 
   *input_file = this->input_file_;
   *memoff = off + static_cast<off_t>(sizeof(Archive_header));
@@ -455,11 +470,11 @@ Archive::get_file_and_offset(off_t off, Input_objects* input_objects,
   // to the directory containing the archive.
   if (!IS_ABSOLUTE_PATH(member_name->c_str()))
     {
-      const char* arch_path = this->name().c_str();
+      const char* arch_path = this->filename().c_str();
       const char* basename = lbasename(arch_path);
       if (basename > arch_path)
         member_name->replace(0, 0,
-                             this->name().substr(0, basename - arch_path));
+                             this->filename().substr(0, basename - arch_path));
     }
 
   if (nested_off > 0)
@@ -475,101 +490,108 @@ Archive::get_file_and_offset(off_t off, Input_objects* input_objects,
       else
         {
           Input_file_argument* input_file_arg =
-            new Input_file_argument(member_name->c_str(), false, "", false,
-                                    parameters->options());
+            new Input_file_argument(member_name->c_str(),
+                                    Input_file_argument::INPUT_FILE_TYPE_FILE,
+                                    "", false, parameters->options());
           *input_file = new Input_file(input_file_arg);
-          if (!(*input_file)->open(parameters->options(), *this->dirpath_,
-                                   this->task_))
+	  int dummy = 0;
+          if (!(*input_file)->open(*this->dirpath_, this->task_, &dummy))
             return false;
           arch = new Archive(*member_name, *input_file, false, this->dirpath_,
                              this->task_);
-          arch->setup(input_objects);
+          arch->setup();
           std::pair<Nested_archive_table::iterator, bool> ins =
             this->nested_archives_.insert(std::make_pair(*member_name, arch));
           gold_assert(ins.second);
         }
-      return arch->get_file_and_offset(nested_off, input_objects,
-                                       input_file, memoff, member_name);
+      return arch->get_file_and_offset(nested_off, input_file, memoff,
+				       memsize, member_name);
     }
 
   // This is an external member of a thin archive.  Open the
   // file as a regular relocatable object file.
   Input_file_argument* input_file_arg =
-      new Input_file_argument(member_name->c_str(), false, "", false,
-                              this->input_file_->options());
+      new Input_file_argument(member_name->c_str(),
+                              Input_file_argument::INPUT_FILE_TYPE_FILE,
+                              "", false, this->input_file_->options());
   *input_file = new Input_file(input_file_arg);
-  if (!(*input_file)->open(parameters->options(), *this->dirpath_,
-                           this->task_))
+  int dummy = 0;
+  if (!(*input_file)->open(*this->dirpath_, this->task_, &dummy))
     return false;
 
   *memoff = 0;
+  *memsize = (*input_file)->file().filesize();
   return true;
 }
 
-// Return an ELF object for the member at offset OFF.  Set *MEMBER_NAME to
-// the name of the member.
+// Return an ELF object for the member at offset OFF.  If the ELF
+// object has an unsupported target type, set *PUNCONFIGURED to true
+// and return NULL.
 
 Object*
-Archive::get_elf_object_for_member(off_t off, Input_objects* input_objects)
+Archive::get_elf_object_for_member(off_t off, bool* punconfigured)
 {
-  std::string member_name;
+  *punconfigured = false;
+
   Input_file* input_file;
   off_t memoff;
-
-  if (!this->get_file_and_offset(off, input_objects, &input_file, &memoff,
-                                 &member_name))
+  off_t memsize;
+  std::string member_name;
+  if (!this->get_file_and_offset(off, &input_file, &memoff, &memsize,
+				 &member_name))
     return NULL;
 
-  off_t filesize = input_file->file().filesize();
-  int read_size = elfcpp::Elf_sizes<64>::ehdr_size;
-  if (filesize - memoff < read_size)
-    read_size = filesize - memoff;
+  if (parameters->options().has_plugins())
+    {
+      Object* obj = parameters->options().plugins()->claim_file(input_file,
+                                                                memoff,
+                                                                memsize);
+      if (obj != NULL)
+        {
+          // The input file was claimed by a plugin, and its symbols
+          // have been provided by the plugin.
+          return obj;
+        }
+    }
 
-  if (read_size < 4)
+  const unsigned char* ehdr;
+  int read_size;
+  if (!is_elf_object(input_file, memoff, &ehdr, &read_size))
     {
       gold_error(_("%s: member at %zu is not an ELF object"),
 		 this->name().c_str(), static_cast<size_t>(off));
       return NULL;
     }
 
-  const unsigned char* ehdr = input_file->file().get_view(memoff, 0, read_size,
-							  true, false);
-
-  static unsigned char elfmagic[4] =
-    {
-      elfcpp::ELFMAG0, elfcpp::ELFMAG1,
-      elfcpp::ELFMAG2, elfcpp::ELFMAG3
-    };
-  if (memcmp(ehdr, elfmagic, 4) != 0)
-    {
-      gold_error(_("%s: member at %zu is not an ELF object"),
-		 this->name().c_str(), static_cast<size_t>(off));
-      return NULL;
-    }
-
-  return make_elf_object((std::string(this->input_file_->filename())
+  Object *obj = make_elf_object((std::string(this->input_file_->filename())
 				 + "(" + member_name + ")"),
-				input_file, memoff, ehdr, read_size);
+				input_file, memoff, ehdr, read_size,
+				punconfigured);
+  if (obj == NULL)
+    return NULL;
+  obj->set_no_export(this->no_export());
+  return obj;
 }
 
 // Read the symbols from all the archive members in the link.
 
 void
-Archive::read_all_symbols(Input_objects* input_objects)
+Archive::read_all_symbols()
 {
   for (Archive::const_iterator p = this->begin();
        p != this->end();
        ++p)
-    this->read_symbols(input_objects, p->off);
+    this->read_symbols(p->off);
 }
 
 // Read the symbols from an archive member in the link.  OFF is the file
 // offset of the member header.
 
 void
-Archive::read_symbols(Input_objects* input_objects, off_t off)
+Archive::read_symbols(off_t off)
 {
-  Object* obj = this->get_elf_object_for_member(off, input_objects);
+  bool dummy;
+  Object* obj = this->get_elf_object_for_member(off, &dummy);
 
   if (obj == NULL)
     return;
@@ -585,9 +607,11 @@ Archive::read_symbols(Input_objects* input_objects, off_t off)
 // the symbol table.  If it exists as a strong undefined symbol, we
 // pull in the corresponding element.  We have to do this in a loop,
 // since pulling in one element may create new undefined symbols which
-// may be satisfied by other objects in the archive.
+// may be satisfied by other objects in the archive.  Return true in
+// the normal case, false if the first member we tried to add from
+// this archive had an incompatible target.
 
-void
+bool
 Archive::add_symbols(Symbol_table* symtab, Layout* layout,
 		     Input_objects* input_objects, Mapfile* mapfile)
 {
@@ -611,6 +635,8 @@ Archive::add_symbols(Symbol_table* symtab, Layout* layout,
   // Track which symbols in the symbol table we've already found to be
   // defined.
 
+  char* tmpbuf = NULL;
+  size_t tmpbuflen = 0;
   bool added_new_object;
   do
     {
@@ -634,7 +660,41 @@ Archive::add_symbols(Symbol_table* symtab, Layout* layout,
 
 	  const char* sym_name = (this->armap_names_.data()
 				  + this->armap_[i].name_offset);
-	  Symbol* sym = symtab->lookup(sym_name);
+
+	  // In an object file, and therefore in an archive map, an
+	  // '@' in the name separates the symbol name from the
+	  // version name.  If there are two '@' characters, this is
+	  // the default version.
+	  const char* ver = strchr(sym_name, '@');
+	  bool def = false;
+	  if (ver != NULL)
+	    {
+	      size_t symlen = ver - sym_name;
+	      if (symlen + 1 > tmpbuflen)
+		{
+		  tmpbuf = static_cast<char*>(realloc(tmpbuf, symlen + 1));
+		  tmpbuflen = symlen + 1;
+		}
+	      memcpy(tmpbuf, sym_name, symlen);
+	      tmpbuf[symlen] = '\0';
+	      sym_name = tmpbuf;
+
+	      ++ver;
+	      if (*ver == '@')
+		{
+		  ++ver;
+		  def = true;
+		}
+	    }
+
+	  Symbol* sym = symtab->lookup(sym_name, ver);
+	  if (def
+	      && ver != NULL
+	      && (sym == NULL
+		  || !sym->is_undefined()
+		  || sym->binding() == elfcpp::STB_WEAK))
+	    sym = symtab->lookup(sym_name, NULL);
+
 	  if (sym == NULL)
 	    {
 	      // Check whether the symbol was named in a -u option.
@@ -660,20 +720,31 @@ Archive::add_symbols(Symbol_table* symtab, Layout* layout,
 	      why = "-u ";
 	      why += sym_name;
 	    }
-	  this->include_member(symtab, layout, input_objects,
-			       last_seen_offset, mapfile, sym, why.c_str());
+	  if (!this->include_member(symtab, layout, input_objects,
+				    last_seen_offset, mapfile, sym,
+				    why.c_str()))
+	    {
+	      if (tmpbuf != NULL)
+		free(tmpbuf);
+	      return false;
+	    }
 
 	  added_new_object = true;
 	}
     }
   while (added_new_object);
 
+  if (tmpbuf != NULL)
+    free(tmpbuf);
+
   input_objects->archive_stop(this);
+
+  return true;
 }
 
 // Include all the archive members in the link.  This is for --whole-archive.
 
-void
+bool
 Archive::include_all_members(Symbol_table* symtab, Layout* layout,
                              Input_objects* input_objects, Mapfile* mapfile)
 {
@@ -686,8 +757,9 @@ Archive::include_all_members(Symbol_table* symtab, Layout* layout,
            p != this->members_.end();
            ++p)
         {
-          this->include_member(symtab, layout, input_objects, p->first,
-			       mapfile, NULL, "--whole-archive");
+          if (!this->include_member(symtab, layout, input_objects, p->first,
+				    mapfile, NULL, "--whole-archive"))
+	    return false;
           ++Archive::total_members;
         }
     }
@@ -697,13 +769,16 @@ Archive::include_all_members(Symbol_table* symtab, Layout* layout,
            p != this->end();
            ++p)
         {
-          this->include_member(symtab, layout, input_objects, p->off,
-			       mapfile, NULL, "--whole-archive");
+          if (!this->include_member(symtab, layout, input_objects, p->off,
+				    mapfile, NULL, "--whole-archive"))
+	    return false;
           ++Archive::total_members;
         }
     }
 
   input_objects->archive_stop(this);
+
+  return true;
 }
 
 // Return the number of members in the archive.  This is only used for
@@ -722,8 +797,11 @@ Archive::count_members()
 
 // Include an archive member in the link.  OFF is the file offset of
 // the member header.  WHY is the reason we are including this member.
+// Return true if we added the member or if we had an error, return
+// false if this was the first member we tried to add from this
+// archive and it had an incompatible format.
 
-void
+bool
 Archive::include_member(Symbol_table* symtab, Layout* layout,
 			Input_objects* input_objects, off_t off,
 			Mapfile* mapfile, Symbol* sym, const char* why)
@@ -734,37 +812,65 @@ Archive::include_member(Symbol_table* symtab, Layout* layout,
   if (p != this->members_.end())
     {
       Object *obj = p->second.obj_;
+
       Read_symbols_data *sd = p->second.sd_;
       if (mapfile != NULL)
         mapfile->report_include_archive_member(obj->name(), sym, why);
       if (input_objects->add_object(obj))
         {
           obj->layout(symtab, layout, sd);
-          obj->add_symbols(symtab, sd);
+          obj->add_symbols(symtab, sd, layout);
+	  this->included_member_ = true;
         }
       delete sd;
-      return;
+      return true;
     }
 
-  Object* obj = this->get_elf_object_for_member(off, input_objects);
+  bool unconfigured;
+  Object* obj = this->get_elf_object_for_member(off, &unconfigured);
+
+  if (!this->included_member_
+      && this->searched_for()
+      && obj == NULL
+      && unconfigured)
+    {
+      if (obj != NULL)
+	delete obj;
+      return false;
+    }
+
   if (obj == NULL)
-    return;
+    return true;
 
   if (mapfile != NULL)
     mapfile->report_include_archive_member(obj->name(), sym, why);
 
-  if (input_objects->add_object(obj))
+  Pluginobj* pluginobj = obj->pluginobj();
+  if (pluginobj != NULL)
+    {
+      pluginobj->add_symbols(symtab, NULL, layout);
+      this->included_member_ = true;
+      return true;
+    }
+
+  if (!input_objects->add_object(obj))
+    delete obj;
+  else
     {
       Read_symbols_data sd;
       obj->read_symbols(&sd);
       obj->layout(symtab, layout, &sd);
-      obj->add_symbols(symtab, &sd);
+      obj->add_symbols(symtab, &sd, layout);
+
+      // If this is an external member of a thin archive, unlock the file
+      // for the next task.
+      if (obj->offset() == 0)
+        obj->unlock(this->task_);
+
+      this->included_member_ = true;
     }
-  else
-    {
-      // FIXME: We need to close the descriptor here.
-      delete obj;
-    }
+
+  return true;
 }
 
 // Print statistical information to stderr.  This is used for --stats.
@@ -809,15 +915,29 @@ Add_archive_symbols::locks(Task_locker* tl)
 }
 
 void
-Add_archive_symbols::run(Workqueue*)
+Add_archive_symbols::run(Workqueue* workqueue)
 {
-  this->archive_->add_symbols(this->symtab_, this->layout_,
-			      this->input_objects_, this->mapfile_);
-
+  bool added = this->archive_->add_symbols(this->symtab_, this->layout_,
+					   this->input_objects_,
+					   this->mapfile_);
   this->archive_->unlock_nested_archives();
 
   this->archive_->release();
   this->archive_->clear_uncached_views();
+
+  if (!added)
+    {
+      // This archive holds object files which are incompatible with
+      // our output file.
+      Read_symbols::incompatible_warning(this->input_argument_,
+					 this->archive_->input_file());
+      Read_symbols::requeue(workqueue, this->input_objects_, this->symtab_,
+			    this->layout_, this->dirpath_, this->dirindex_,
+			    this->mapfile_, this->input_argument_,
+			    this->input_group_, this->next_blocker_);
+      delete this->archive_;
+      return;
+    }
 
   if (this->input_group_ != NULL)
     this->input_group_->add_archive(this->archive_);

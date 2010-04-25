@@ -61,6 +61,18 @@ typedef Expression* Expression_ptr;
 typedef void* Expression_ptr;
 #endif
 
+/* Script_section type.  */
+enum Script_section_type
+{
+  /* No section type.  */
+  SCRIPT_SECTION_TYPE_NONE,
+  SCRIPT_SECTION_TYPE_NOLOAD,
+  SCRIPT_SECTION_TYPE_DSECT,
+  SCRIPT_SECTION_TYPE_COPY,
+  SCRIPT_SECTION_TYPE_INFO,
+  SCRIPT_SECTION_TYPE_OVERLAY
+};
+
 /* A constraint for whether to use a particular output section
    definition.  */
 
@@ -83,6 +95,8 @@ struct Parser_output_section_header
 {
   /* The address.  This may be NULL.  */
   Expression_ptr address;
+  /* Section type.  May be NULL string.  */ 
+  enum Script_section_type section_type;
   /* The load address, from the AT specifier.  This may be NULL.  */
   Expression_ptr load_address;
   /* The alignment, from the ALIGN specifier.  This may be NULL.  */
@@ -211,6 +225,12 @@ yylex(YYSTYPE*, void* closure);
 extern void
 yyerror(void* closure, const char*);
 
+/* Called by the bison parser to add an external symbol (a symbol in
+   an EXTERN declaration) to the link.  */
+
+extern void
+script_add_extern(void* closure, const char*, size_t);
+
 /* Called by the bison parser to add a file to the link.  */
 
 extern void
@@ -244,6 +264,17 @@ script_set_common_allocation(void* closure, int);
 
 extern void
 script_parse_option(void* closure, const char*, size_t);
+
+/* Called by the bison parser to handle OUTPUT_FORMAT.  This return 0
+   if the parse should be aborted.  */
+
+extern int
+script_check_output_format(void* closure, const char*, size_t,
+			   const char*, size_t, const char*, size_t);
+
+/* Called by the bison parser to handle TARGET.  */
+extern void
+script_set_target(void* closure, const char*, size_t);
 
 /* Called by the bison parser to handle SEARCH_DIR.  */
 
@@ -371,6 +402,11 @@ script_data_segment_align(void* closure);
 
 extern void
 script_data_segment_relro_end(void* closure);
+
+/* Record the fact that a SEGMENT_START expression is seen.  */
+
+extern void
+script_saw_segment_start_expression(void* closure);
 
 /* Called by the bison parser for expressions.  */
 
