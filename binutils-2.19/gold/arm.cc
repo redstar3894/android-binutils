@@ -1164,6 +1164,11 @@ class Arm_input_section : public Output_relaxed_input_section
   as_arm_input_section(Output_relaxed_input_section* poris)
   { return static_cast<Arm_input_section<big_endian>*>(poris); }
 
+  // Return the original size of the section.
+  uint32_t
+  original_size() const
+  { return this->original_size_; }
+
  protected:
   // Write data to output file.
   void
@@ -1175,7 +1180,7 @@ class Arm_input_section : public Output_relaxed_input_section
   {
     if (this->is_stub_table_owner())
       return std::max(this->stub_table_->addralign(),
-		      this->original_addralign_);
+		      static_cast<uint64_t>(this->original_addralign_));
     else
       return this->original_addralign_;
   }
@@ -1197,8 +1202,8 @@ class Arm_input_section : public Output_relaxed_input_section
     if ((object == this->relobj())
 	&& (shndx == this->shndx())
 	&& (offset >= 0)
-	&& (convert_types<uint64_t, section_offset_type>(offset)
-	    <= this->original_size_))
+	&& (offset <=
+	    convert_types<section_offset_type, uint32_t>(this->original_size_)))
       {
 	*poutput = offset;
 	return true;
@@ -1213,9 +1218,9 @@ class Arm_input_section : public Output_relaxed_input_section
   Arm_input_section& operator=(const Arm_input_section&);
 
   // Address alignment of the original input section.
-  uint64_t original_addralign_;
+  uint32_t original_addralign_;
   // Section size of the original input section.
-  uint64_t original_size_;
+  uint32_t original_size_;
   // Stub table.
   Stub_table<big_endian>* stub_table_;
 };
@@ -1946,6 +1951,79 @@ class Arm_output_data_got : public Output_data_got<32, big_endian>
   std::vector<Static_reloc> static_relocs_;
 };
 
+// The ARM target has many relocation types with odd-sizes or incontigious
+// bits.  The default handling of relocatable relocation cannot process these
+// relocations.  So we have to extend the default code.
+
+template<bool big_endian, int sh_type, typename Classify_reloc>
+class Arm_scan_relocatable_relocs :
+  public Default_scan_relocatable_relocs<sh_type, Classify_reloc>
+{
+ public:
+  // Return the strategy to use for a local symbol which is a section
+  // symbol, given the relocation type.
+  inline Relocatable_relocs::Reloc_strategy
+  local_section_strategy(unsigned int r_type, Relobj*)
+  {
+    if (sh_type == elfcpp::SHT_RELA)
+      return Relocatable_relocs::RELOC_ADJUST_FOR_SECTION_RELA;
+    else
+      {
+	if (r_type == elfcpp::R_ARM_TARGET1
+	    || r_type == elfcpp::R_ARM_TARGET2)
+	  {
+	    const Target_arm<big_endian>* arm_target =
+	      Target_arm<big_endian>::default_target();
+	    r_type = arm_target->get_real_reloc_type(r_type);
+	  }
+
+	switch(r_type)
+	  {
+	  // Relocations that write nothing.  These exclude R_ARM_TARGET1
+	  // and R_ARM_TARGET2.
+	  case elfcpp::R_ARM_NONE:
+	  case elfcpp::R_ARM_V4BX:
+	  case elfcpp::R_ARM_TLS_GOTDESC:
+	  case elfcpp::R_ARM_TLS_CALL:
+	  case elfcpp::R_ARM_TLS_DESCSEQ:
+	  case elfcpp::R_ARM_THM_TLS_CALL:
+	  case elfcpp::R_ARM_GOTRELAX:
+	  case elfcpp::R_ARM_GNU_VTENTRY:
+	  case elfcpp::R_ARM_GNU_VTINHERIT:
+	  case elfcpp::R_ARM_THM_TLS_DESCSEQ16:
+	  case elfcpp::R_ARM_THM_TLS_DESCSEQ32:
+	    return Relocatable_relocs::RELOC_ADJUST_FOR_SECTION_0;
+	  // These should have been converted to something else above.
+	  case elfcpp::R_ARM_TARGET1:
+	  case elfcpp::R_ARM_TARGET2:
+	    gold_unreachable();
+	  // Relocations that write full 32 bits.
+	  case elfcpp::R_ARM_ABS32:
+	  case elfcpp::R_ARM_REL32:
+	  case elfcpp::R_ARM_SBREL32:
+	  case elfcpp::R_ARM_GOTOFF32:
+	  case elfcpp::R_ARM_BASE_PREL:
+	  case elfcpp::R_ARM_GOT_BREL:
+	  case elfcpp::R_ARM_BASE_ABS:
+	  case elfcpp::R_ARM_ABS32_NOI:
+	  case elfcpp::R_ARM_REL32_NOI:
+	  case elfcpp::R_ARM_PLT32_ABS:
+	  case elfcpp::R_ARM_GOT_ABS:
+	  case elfcpp::R_ARM_GOT_PREL:
+	  case elfcpp::R_ARM_TLS_GD32:
+	  case elfcpp::R_ARM_TLS_LDM32:
+	  case elfcpp::R_ARM_TLS_LDO32:
+	  case elfcpp::R_ARM_TLS_IE32:
+	  case elfcpp::R_ARM_TLS_LE32:
+	    return Relocatable_relocs::RELOC_ADJUST_FOR_SECTION_4;
+	  default:
+	    // For all other static relocations, return RELOC_SPECIAL.
+	    return Relocatable_relocs::RELOC_SPECIAL;
+	  }
+      }
+  }
+};
+
 // Utilities for manipulating integers of up to 32-bits
 
 namespace utils
@@ -2175,6 +2253,21 @@ class Target_arm : public Sized_target<32, big_endian>
 			   unsigned char* reloc_view,
 			   section_size_type reloc_view_size);
 
+  // Perform target-specific processing in a relocatable link.  This is
+  // only used if we use the relocation strategy RELOC_SPECIAL.
+  void
+  relocate_special_relocatable(const Relocate_info<32, big_endian>* relinfo,
+			       unsigned int sh_type,
+			       const unsigned char* preloc_in,
+			       size_t relnum,
+			       Output_section* output_section,
+			       off_t offset_in_output_section,
+			       unsigned char* view,
+			       typename elfcpp::Elf_types<32>::Elf_Addr
+				 view_address,
+			       section_size_type view_size,
+			       unsigned char* preloc_out);
+ 
   // Return whether SYM is defined by the ABI.
   bool
   do_is_defined_by_abi(Symbol* sym) const
@@ -3706,6 +3799,7 @@ Arm_relocate_functions<big_endian>::arm_branch_common(
     Target_arm<big_endian>::default_target();
   if (is_weakly_undefined_without_plt)
     {
+      gold_assert(!parameters->options().relocatable());
       Valtype cond = val & 0xf0000000U;
       if (arm_target->may_use_arm_nop())
 	val = cond | 0x0320f000;
@@ -3723,8 +3817,11 @@ Arm_relocate_functions<big_endian>::arm_branch_common(
   // to switch mode.
   bool may_use_blx = arm_target->may_use_blx();
   Reloc_stub* stub = NULL;
-  if (utils::has_overflow<26>(branch_offset)
-      || ((thumb_bit != 0) && !(may_use_blx && r_type == elfcpp::R_ARM_CALL)))
+
+  if (!parameters->options().relocatable()
+      && (utils::has_overflow<26>(branch_offset)
+	  || ((thumb_bit != 0)
+	      && !(may_use_blx && r_type == elfcpp::R_ARM_CALL))))
     {
       Valtype unadjusted_branch_target = psymval->value(object, 0);
 
@@ -3831,6 +3928,7 @@ Arm_relocate_functions<big_endian>::thumb_branch_common(
     Target_arm<big_endian>::default_target();
   if (is_weakly_undefined_without_plt)
     {
+      gold_assert(!parameters->options().relocatable());
       if (arm_target->may_use_thumb2_nop())
 	{
 	  elfcpp::Swap<16, big_endian>::writeval(wv, 0xf3af);
@@ -3857,11 +3955,12 @@ Arm_relocate_functions<big_endian>::thumb_branch_common(
   // We need a stub if the branch offset is too large or if we need
   // to switch mode.
   bool thumb2 = arm_target->using_thumb2();
-  if ((!thumb2 && utils::has_overflow<23>(branch_offset))
-      || (thumb2 && utils::has_overflow<25>(branch_offset))
-      || ((thumb_bit == 0)
-          && (((r_type == elfcpp::R_ARM_THM_CALL) && !may_use_blx)
-	      || r_type == elfcpp::R_ARM_THM_JUMP24)))
+  if (!parameters->options().relocatable()
+      && ((!thumb2 && utils::has_overflow<23>(branch_offset))
+	  || (thumb2 && utils::has_overflow<25>(branch_offset))
+	  || ((thumb_bit == 0)
+	      && (((r_type == elfcpp::R_ARM_THM_CALL) && !may_use_blx)
+		  || r_type == elfcpp::R_ARM_THM_JUMP24))))
     {
       Arm_address unadjusted_branch_target = psymval->value(object, 0);
 
@@ -4895,8 +4994,10 @@ Arm_input_section<big_endian>::init()
 
   // Cache these to speed up size and alignment queries.  It is too slow
   // to call section_addraglin and section_size every time.
-  this->original_addralign_ = relobj->section_addralign(shndx);
-  this->original_size_ = relobj->section_size(shndx);
+  this->original_addralign_ =
+    convert_types<uint32_t, uint64_t>(relobj->section_addralign(shndx));
+  this->original_size_ =
+    convert_types<uint32_t, uint64_t>(relobj->section_size(shndx));
 
   // We want to make this look like the original input section after
   // output sections are finalized.
@@ -4931,21 +5032,15 @@ template<bool big_endian>
 void
 Arm_input_section<big_endian>::set_final_data_size()
 {
-  // If this owns a stub table, finalize its data size as well.
+  off_t off = convert_types<off_t, uint64_t>(this->original_size_);
+
   if (this->is_stub_table_owner())
     {
-      uint64_t address = this->address();
-
-      // The stub table comes after the original section contents.
-      address += this->original_size_;
-      address = align_address(address, this->stub_table_->addralign());
-      off_t offset = this->offset() + (address - this->address());
-      this->stub_table_->set_address_and_file_offset(address, offset);
-      address += this->stub_table_->data_size();
-      gold_assert(address == this->address() + this->current_data_size());
+      this->stub_table_->finalize_data_size();
+      off = align_address(off, this->stub_table_->addralign());
+      off += this->stub_table_->data_size();
     }
-
-  this->set_data_size(this->current_data_size());
+  this->set_data_size(off);
 }
 
 // Reset address and file offset.
@@ -5564,8 +5659,8 @@ Arm_output_section<big_endian>::fix_exidx_coverage(
 
   // Remove all input sections.
   uint64_t address = this->address();
-  typedef std::list<Simple_input_section> Simple_input_section_list;
-  Simple_input_section_list input_sections;
+  typedef std::list<Output_section::Input_section> Input_section_list;
+  Input_section_list input_sections;
   this->reset_address_and_file_offset();
   this->get_input_sections(address, std::string(""), &input_sections);
 
@@ -5574,20 +5669,23 @@ Arm_output_section<big_endian>::fix_exidx_coverage(
   
   // Go through all the known input sections and record them.
   typedef Unordered_set<Section_id, Section_id_hash> Section_id_set;
-  Section_id_set known_input_sections;
-  for (Simple_input_section_list::const_iterator p = input_sections.begin();
+  typedef Unordered_map<Section_id, const Output_section::Input_section*,
+			Section_id_hash> Text_to_exidx_map;
+  Text_to_exidx_map text_to_exidx_map;
+  for (Input_section_list::const_iterator p = input_sections.begin();
        p != input_sections.end();
        ++p)
     {
       // This should never happen.  At this point, we should only see
       // plain EXIDX input sections.
       gold_assert(!p->is_relaxed_input_section());
-      known_input_sections.insert(Section_id(p->relobj(), p->shndx()));
+      text_to_exidx_map[Section_id(p->relobj(), p->shndx())] = &(*p);
     }
 
   Arm_exidx_fixup exidx_fixup(this);
 
   // Go over the sorted text sections.
+  typedef Unordered_set<Section_id, Section_id_hash> Section_id_set;
   Section_id_set processed_input_sections;
   for (Text_section_list::const_iterator p = sorted_text_sections.begin();
        p != sorted_text_sections.end();
@@ -5612,7 +5710,8 @@ Arm_output_section<big_endian>::fix_exidx_coverage(
       Relobj* exidx_relobj = exidx_input_section->relobj();
       unsigned int exidx_shndx = exidx_input_section->shndx();
       Section_id sid(exidx_relobj, exidx_shndx);
-      if (known_input_sections.find(sid) == known_input_sections.end())
+      Text_to_exidx_map::const_iterator iter = text_to_exidx_map.find(sid);
+      if (iter == text_to_exidx_map.end())
 	{
 	  // This is odd.  We have not seen this EXIDX input section before.
 	  // We cannot do fix-up.  If we saw a SECTIONS clause in a script,
@@ -5667,9 +5766,9 @@ Arm_output_section<big_endian>::fix_exidx_coverage(
 	{
 	  // Just add back the EXIDX input section.
 	  gold_assert(section_offset_map == NULL);
-	  Output_section::Simple_input_section sis(exidx_relobj, exidx_shndx);
-	  this->add_simple_input_section(sis, exidx_input_section->size(),
-					 exidx_input_section->addralign());
+	  const Output_section::Input_section* pis = iter->second;
+	  gold_assert(pis->is_input_section());
+	  this->add_script_input_section(*pis);
 	}
 
       processed_input_sections.insert(Section_id(exidx_relobj, exidx_shndx)); 
@@ -5679,7 +5778,7 @@ Arm_output_section<big_endian>::fix_exidx_coverage(
   exidx_fixup.add_exidx_cantunwind_as_needed();
 
   // Remove any known EXIDX input sections that are not processed.
-  for (Simple_input_section_list::const_iterator p = input_sections.begin();
+  for (Input_section_list::const_iterator p = input_sections.begin();
        p != input_sections.end();
        ++p)
     {
@@ -5696,8 +5795,10 @@ Arm_output_section<big_endian>::fix_exidx_coverage(
 	  unsigned int text_shndx = exidx_input_section->link();
 	  gold_assert(symtab->is_section_folded(p->relobj(), text_shndx));
 
-	  // Remove this from link.
+	  // Remove this from link.  We also need to recount the
+	  // local symbols.
 	  p->relobj()->set_output_section(p->shndx(), NULL);
+	  arm_relobj->set_output_local_symbol_count_needs_update();
 	}
     }
     
@@ -8895,7 +8996,7 @@ Target_arm<big_endian>::scan_relocatable_relocs(
 {
   gold_assert(sh_type == elfcpp::SHT_REL);
 
-  typedef gold::Default_scan_relocatable_relocs<elfcpp::SHT_REL,
+  typedef Arm_scan_relocatable_relocs<big_endian, elfcpp::SHT_REL,
     Relocatable_size_for_reloc> Scan_relocatable_relocs;
 
   gold::scan_relocatable_relocs<32, big_endian, elfcpp::SHT_REL,
@@ -8945,6 +9046,291 @@ Target_arm<big_endian>::relocate_for_relocatable(
     view_size,
     reloc_view,
     reloc_view_size);
+}
+
+// Perform target-specific processing in a relocatable link.  This is
+// only used if we use the relocation strategy RELOC_SPECIAL.
+
+template<bool big_endian>
+void
+Target_arm<big_endian>::relocate_special_relocatable(
+    const Relocate_info<32, big_endian>* relinfo,
+    unsigned int sh_type,
+    const unsigned char* preloc_in,
+    size_t relnum,
+    Output_section* output_section,
+    off_t offset_in_output_section,
+    unsigned char* view,
+    elfcpp::Elf_types<32>::Elf_Addr view_address,
+    section_size_type,
+    unsigned char* preloc_out)
+{
+  // We can only handle REL type relocation sections.
+  gold_assert(sh_type == elfcpp::SHT_REL);
+
+  typedef typename Reloc_types<elfcpp::SHT_REL, 32, big_endian>::Reloc Reltype;
+  typedef typename Reloc_types<elfcpp::SHT_REL, 32, big_endian>::Reloc_write
+    Reltype_write;
+  const Arm_address invalid_address = static_cast<Arm_address>(0) - 1;
+
+  const Arm_relobj<big_endian>* object =
+    Arm_relobj<big_endian>::as_arm_relobj(relinfo->object);
+  const unsigned int local_count = object->local_symbol_count();
+
+  Reltype reloc(preloc_in);
+  Reltype_write reloc_write(preloc_out);
+
+  elfcpp::Elf_types<32>::Elf_WXword r_info = reloc.get_r_info();
+  const unsigned int r_sym = elfcpp::elf_r_sym<32>(r_info);
+  const unsigned int r_type = elfcpp::elf_r_type<32>(r_info);
+
+  const Arm_reloc_property* arp =
+    arm_reloc_property_table->get_implemented_static_reloc_property(r_type);
+  gold_assert(arp != NULL);
+
+  // Get the new symbol index.
+  // We only use RELOC_SPECIAL strategy in local relocations.
+  gold_assert(r_sym < local_count);
+
+  // We are adjusting a section symbol.  We need to find
+  // the symbol table index of the section symbol for
+  // the output section corresponding to input section
+  // in which this symbol is defined.
+  bool is_ordinary;
+  unsigned int shndx = object->local_symbol_input_shndx(r_sym, &is_ordinary);
+  gold_assert(is_ordinary);
+  Output_section* os = object->output_section(shndx);
+  gold_assert(os != NULL);
+  gold_assert(os->needs_symtab_index());
+  unsigned int new_symndx = os->symtab_index();
+
+  // Get the new offset--the location in the output section where
+  // this relocation should be applied.
+
+  Arm_address offset = reloc.get_r_offset();
+  Arm_address new_offset;
+  if (offset_in_output_section != invalid_address)
+    new_offset = offset + offset_in_output_section;
+  else
+    {
+      section_offset_type sot_offset =
+          convert_types<section_offset_type, Arm_address>(offset);
+      section_offset_type new_sot_offset =
+          output_section->output_offset(object, relinfo->data_shndx,
+                                        sot_offset);
+      gold_assert(new_sot_offset != -1);
+      new_offset = new_sot_offset;
+    }
+
+  // In an object file, r_offset is an offset within the section.
+  // In an executable or dynamic object, generated by
+  // --emit-relocs, r_offset is an absolute address.
+  if (!parameters->options().relocatable())
+    {
+      new_offset += view_address;
+      if (offset_in_output_section != invalid_address)
+        new_offset -= offset_in_output_section;
+    }
+
+  reloc_write.put_r_offset(new_offset);
+  reloc_write.put_r_info(elfcpp::elf_r_info<32>(new_symndx, r_type));
+
+  // Handle the reloc addend.
+  // The relocation uses a section symbol in the input file.
+  // We are adjusting it to use a section symbol in the output
+  // file.  The input section symbol refers to some address in
+  // the input section.  We need the relocation in the output
+  // file to refer to that same address.  This adjustment to
+  // the addend is the same calculation we use for a simple
+  // absolute relocation for the input section symbol.
+
+  const Symbol_value<32>* psymval = object->local_symbol(r_sym);
+
+  // Handle THUMB bit.
+  Symbol_value<32> symval;
+  Arm_address thumb_bit =
+     object->local_symbol_is_thumb_function(r_sym) ? 1 : 0;
+  if (thumb_bit != 0
+      && arp->uses_thumb_bit() 
+      && ((psymval->value(object, 0) & 1) != 0))
+    {
+      Arm_address stripped_value =
+	psymval->value(object, 0) & ~static_cast<Arm_address>(1);
+      symval.set_output_value(stripped_value);
+      psymval = &symval;
+    } 
+
+  unsigned char* paddend = view + offset;
+  typename Arm_relocate_functions<big_endian>::Status reloc_status =
+	Arm_relocate_functions<big_endian>::STATUS_OKAY;
+  switch (r_type)
+    {
+    case elfcpp::R_ARM_ABS8:
+      reloc_status = Arm_relocate_functions<big_endian>::abs8(paddend, object,
+							      psymval);
+      break;
+
+    case elfcpp::R_ARM_ABS12:
+      reloc_status = Arm_relocate_functions<big_endian>::abs12(paddend, object,
+							       psymval);
+      break;
+
+    case elfcpp::R_ARM_ABS16:
+      reloc_status = Arm_relocate_functions<big_endian>::abs16(paddend, object,
+							       psymval);
+      break;
+
+    case elfcpp::R_ARM_THM_ABS5:
+      reloc_status = Arm_relocate_functions<big_endian>::thm_abs5(paddend,
+								  object,
+								  psymval);
+      break;
+
+    case elfcpp::R_ARM_MOVW_ABS_NC:
+    case elfcpp::R_ARM_MOVW_PREL_NC:
+    case elfcpp::R_ARM_MOVW_BREL_NC:
+    case elfcpp::R_ARM_MOVW_BREL:
+      reloc_status = Arm_relocate_functions<big_endian>::movw(
+	  paddend, object, psymval, 0, thumb_bit, arp->checks_overflow());
+      break;
+
+    case elfcpp::R_ARM_THM_MOVW_ABS_NC:
+    case elfcpp::R_ARM_THM_MOVW_PREL_NC:
+    case elfcpp::R_ARM_THM_MOVW_BREL_NC:
+    case elfcpp::R_ARM_THM_MOVW_BREL:
+      reloc_status = Arm_relocate_functions<big_endian>::thm_movw(
+	  paddend, object, psymval, 0, thumb_bit, arp->checks_overflow());
+      break;
+
+    case elfcpp::R_ARM_THM_CALL:
+    case elfcpp::R_ARM_THM_XPC22:
+    case elfcpp::R_ARM_THM_JUMP24:
+      reloc_status =
+	Arm_relocate_functions<big_endian>::thumb_branch_common(
+	    r_type, relinfo, paddend, NULL, object, 0, psymval, 0, thumb_bit,
+	    false);
+      break;
+
+    case elfcpp::R_ARM_PLT32:
+    case elfcpp::R_ARM_CALL:
+    case elfcpp::R_ARM_JUMP24:
+    case elfcpp::R_ARM_XPC25:
+      reloc_status =
+    	Arm_relocate_functions<big_endian>::arm_branch_common(
+	    r_type, relinfo, paddend, NULL, object, 0, psymval, 0, thumb_bit,
+	    false);
+      break;
+
+    case elfcpp::R_ARM_THM_JUMP19:
+      reloc_status =
+	Arm_relocate_functions<big_endian>::thm_jump19(paddend, object,
+						       psymval, 0, thumb_bit);
+      break;
+
+    case elfcpp::R_ARM_THM_JUMP6:
+      reloc_status =
+	Arm_relocate_functions<big_endian>::thm_jump6(paddend, object, psymval,
+						      0);
+      break;
+
+    case elfcpp::R_ARM_THM_JUMP8:
+      reloc_status =
+	Arm_relocate_functions<big_endian>::thm_jump8(paddend, object, psymval,
+						      0);
+      break;
+
+    case elfcpp::R_ARM_THM_JUMP11:
+      reloc_status =
+	Arm_relocate_functions<big_endian>::thm_jump11(paddend, object, psymval,
+						       0);
+      break;
+
+    case elfcpp::R_ARM_PREL31:
+      reloc_status =
+	Arm_relocate_functions<big_endian>::prel31(paddend, object, psymval, 0,
+						   thumb_bit);
+      break;
+
+    case elfcpp::R_ARM_THM_PC8:
+      reloc_status =
+	Arm_relocate_functions<big_endian>::thm_pc8(paddend, object, psymval,
+						    0);
+      break;
+
+    case elfcpp::R_ARM_THM_PC12:
+      reloc_status =
+	Arm_relocate_functions<big_endian>::thm_pc12(paddend, object, psymval,
+						     0);
+      break;
+
+    case elfcpp::R_ARM_THM_ALU_PREL_11_0:
+      reloc_status =
+	Arm_relocate_functions<big_endian>::thm_alu11(paddend, object, psymval,
+						      0, thumb_bit);
+      break;
+
+    // These relocation truncate relocation results so we cannot handle them
+    // in a relocatable link.
+    case elfcpp::R_ARM_MOVT_ABS:
+    case elfcpp::R_ARM_THM_MOVT_ABS:
+    case elfcpp::R_ARM_MOVT_PREL:
+    case elfcpp::R_ARM_MOVT_BREL:
+    case elfcpp::R_ARM_THM_MOVT_PREL:
+    case elfcpp::R_ARM_THM_MOVT_BREL:
+    case elfcpp::R_ARM_ALU_PC_G0_NC:
+    case elfcpp::R_ARM_ALU_PC_G0:
+    case elfcpp::R_ARM_ALU_PC_G1_NC:
+    case elfcpp::R_ARM_ALU_PC_G1:
+    case elfcpp::R_ARM_ALU_PC_G2:
+    case elfcpp::R_ARM_ALU_SB_G0_NC:
+    case elfcpp::R_ARM_ALU_SB_G0:
+    case elfcpp::R_ARM_ALU_SB_G1_NC:
+    case elfcpp::R_ARM_ALU_SB_G1:
+    case elfcpp::R_ARM_ALU_SB_G2:
+    case elfcpp::R_ARM_LDR_PC_G0:
+    case elfcpp::R_ARM_LDR_PC_G1:
+    case elfcpp::R_ARM_LDR_PC_G2:
+    case elfcpp::R_ARM_LDR_SB_G0:
+    case elfcpp::R_ARM_LDR_SB_G1:
+    case elfcpp::R_ARM_LDR_SB_G2:
+    case elfcpp::R_ARM_LDRS_PC_G0:
+    case elfcpp::R_ARM_LDRS_PC_G1:
+    case elfcpp::R_ARM_LDRS_PC_G2:
+    case elfcpp::R_ARM_LDRS_SB_G0:
+    case elfcpp::R_ARM_LDRS_SB_G1:
+    case elfcpp::R_ARM_LDRS_SB_G2:
+    case elfcpp::R_ARM_LDC_PC_G0:
+    case elfcpp::R_ARM_LDC_PC_G1:
+    case elfcpp::R_ARM_LDC_PC_G2:
+    case elfcpp::R_ARM_LDC_SB_G0:
+    case elfcpp::R_ARM_LDC_SB_G1:
+    case elfcpp::R_ARM_LDC_SB_G2:
+      gold_error(_("cannot handle %s in a relocatable link"),
+		 arp->name().c_str());
+      break;
+
+    default:
+      gold_unreachable();
+    }
+
+  // Report any errors.
+  switch (reloc_status)
+    {
+    case Arm_relocate_functions<big_endian>::STATUS_OKAY:
+      break;
+    case Arm_relocate_functions<big_endian>::STATUS_OVERFLOW:
+      gold_error_at_location(relinfo, relnum, reloc.get_r_offset(),
+			     _("relocation overflow in %s"),
+			     arp->name().c_str());
+      break;
+    case Arm_relocate_functions<big_endian>::STATUS_BAD_RELOC:
+      gold_error_at_location(relinfo, relnum, reloc.get_r_offset(),
+	_("unexpected opcode while processing relocation %s"),
+	arp->name().c_str());
+      break;
+    default:
+      gold_unreachable();
+    }
 }
 
 // Return the value to use for a dynamic symbol which requires special
@@ -10362,6 +10748,7 @@ Target_arm<big_endian>::do_relax(
   // If this is the first pass, we need to group input sections into
   // stub groups.
   bool done_exidx_fixup = false;
+  typedef typename Stub_table_list::iterator Stub_table_iterator;
   if (pass == 1)
     {
       // Determine the stub group size.  The group size is the absolute
@@ -10410,13 +10797,27 @@ Target_arm<big_endian>::do_relax(
 	  done_exidx_fixup = true;
 	}
     }
+  else
+    {
+      // If this is not the first pass, addresses and file offsets have
+      // been reset at this point, set them here.
+      for (Stub_table_iterator sp = this->stub_tables_.begin();
+	   sp != this->stub_tables_.end();
+	   ++sp)
+	{
+	  Arm_input_section<big_endian>* owner = (*sp)->owner();
+	  off_t off = align_address(owner->original_size(),
+				    (*sp)->addralign());
+	  (*sp)->set_address_and_file_offset(owner->address() + off,
+					     owner->offset() + off);
+	}
+    }
 
   // The Cortex-A8 stubs are sensitive to layout of code sections.  At the
   // beginning of each relaxation pass, just blow away all the stubs.
   // Alternatively, we could selectively remove only the stubs and reloc
   // information for code sections that have moved since the last pass.
   // That would require more book-keeping.
-  typedef typename Stub_table_list::iterator Stub_table_iterator;
   if (this->fix_cortex_a8_)
     {
       // Clear all Cortex-A8 reloc information.
@@ -10793,13 +11194,11 @@ Target_arm<big_endian>::apply_cortex_a8_workaround(
   switch (stub->stub_template()->type())
     {
     case arm_stub_a8_veneer_b_cond:
-      gold_assert(!utils::has_overflow<21>(branch_offset));
-      upper_insn = RelocFuncs::thumb32_cond_branch_upper(upper_insn,
-							 branch_offset);
-      lower_insn = RelocFuncs::thumb32_cond_branch_lower(lower_insn,
-							 branch_offset);
-      break;
-
+      // For a conditional branch, we re-write it to be a uncondition
+      // branch to the stub.  We use the THUMB-2 encoding here.
+      upper_insn = 0xf000U;
+      lower_insn = 0xb800U;
+      // Fall through
     case arm_stub_a8_veneer_b:
     case arm_stub_a8_veneer_bl:
     case arm_stub_a8_veneer_blx:

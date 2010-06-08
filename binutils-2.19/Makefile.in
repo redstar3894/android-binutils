@@ -53314,6 +53314,7 @@ all-stageb3g2-ld: maybe-all-stageb3g2-intl
 all-stage4-ld: maybe-all-stage4-intl
 all-stageprofile-ld: maybe-all-stageprofile-intl
 all-stagefeedback-ld: maybe-all-stagefeedback-intl
+install-ld: maybe-install-gold
 configure-gold: maybe-configure-intl
 
 configure-stage1-gold: maybe-configure-stage1-intl

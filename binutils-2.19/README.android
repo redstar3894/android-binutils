@@ -1,3 +1,54 @@
+2010-06-02  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream patches to support dual-linker configuration.
+	
+	gcc change for rev 158786.
+	http://sourceware.org/ml/binutils-cvs/2010-04/msg00138.html
+	http://sourceware.org/ml/binutils-cvs/2010-04/msg00142.html
+
+2010-05-27  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream patches to make gold build ARM Linux kernel
+	correctly.
+
+	http://sourceware.org/ml/binutils-cvs/2010-05/msg00068.html
+	http://sourceware.org/ml/binutils-cvs/2010-05/msg00082.html
+	http://sourceware.org/ml/binutils-cvs/2010-05/msg00104.html
+	http://sourceware.org/ml/binutils-cvs/2010-05/msg00113.html
+
+	Changed files:
+
+	arm.cc
+	merge.cc
+	merge.h
+	object.cc
+	output.cc
+	output.h
+	script-sections.cc
+	target-reloc.h
+	target.h
+
+2010-04-15  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream patch to fix linker crash.
+
+	http://sourceware.org/ml/binutils-cvs/2010-04/msg00078.html
+
+	Changed files:
+
+	gold/arm.cc
+	gold/gold.cc
+
+2010-04-13  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream patch to fix crash during ARM kernel build.
+
+	http://sourceware.org/ml/binutils-cvs/2010-04/msg00067.html
+
+	Changed files:
+
+	gold/arm.cc
+
 2010-04-09  Doug Kwan  <dougkwan@google.com>
 
 	Backport upstream patch to add support for NOLOAD section type in

@@ -90,7 +90,8 @@ CXX_FOR_TARGET = ` \
     fi; \
   fi`
 
-noinst_PROGRAMS = ld-new
+transform = s/^ld-new$$/$(installed_linker)/;@program_transform_name@
+bin_PROGRAMS = ld-new
 info_TEXINFOS = ld.texinfo
 ld_TEXINFOS = configdoc.texi
 noinst_TEXINFOS = ldint.texinfo
@@ -1887,21 +1888,25 @@ install-html-recursive:
 
 .PHONY: install-exec-local install-data-local
 
-install-exec-local: ld-new$(EXEEXT)
-	$(mkinstalldirs) $(DESTDIR)$(bindir) $(DESTDIR)$(tooldir)/bin
-	@list='$(noinst_PROGRAMS)'; for p in $$list; do \
-	  if test -f $$p; then \
-	    echo " $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(bindir)/`echo $$p|sed -e 's/$(EXEEXT)$$//' -e 's/-new//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`"; \
-	    $(LIBTOOL)  --mode=install $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/`echo $$p|sed -e 's/$(EXEEXT)$$//' -e 's/-new//'|sed '$(transform)'|sed 's/$$/$(EXEEXT)/'`; \
-	  else :; fi; \
-	done
-	n=`echo ld | sed '$(transform)'`; \
-	if [ "$(bindir)/$$n$(EXEEXT)" != "$(tooldir)/bin/ld$(EXEEXT)" ]; then \
-	  rm -f $(DESTDIR)$(tooldir)/bin/ld$(EXEEXT); \
-	  ln $(DESTDIR)$(bindir)/$$n$(EXEEXT) $(DESTDIR)$(tooldir)/bin/ld$(EXEEXT) >/dev/null 2>/dev/null \
-	  || $(LIBTOOL) --mode=install $(INSTALL_PROGRAM) ld-new$(EXEEXT) $(DESTDIR)$(tooldir)/bin/ld$(EXEEXT); \
-	fi
-
+install-exec-local: ld-new$(EXEEXT) install-binPROGRAMS
+	$(mkinstalldirs) $(DESTDIR)$(tooldir)/bin
+	n=`echo $(installed_linker) | sed '$(transform)'`; \
+	if test "$(bindir)" != "$(tooldir)/bin"; then \
+	  rm -f $(DESTDIR)$(tooldir)/bin/$(installed_linker)$(EXEEXT); \
+	  ln $(DESTDIR)$(bindir)/$$n$(EXEEXT) $(DESTDIR)$(tooldir)/bin/$(installed_linker)$(EXEEXT) >/dev/null 2>/dev/null \
+	  || $(LIBTOOL) --mode=install $(INSTALL_PROGRAM) ld-new$(EXEEXT) $(DESTDIR)$(tooldir)/bin/$(installed_linker)$(EXEEXT); \
+	fi; \
+	if test "x$(install_as_default)" = "xyes"; then \
+	  ld=`echo ld | sed '$(transform)'`; \
+	  rm -f $(DESTDIR)$(bindir)/$$ld$(EXEEXT); \
+	  ln $(DESTDIR)$(bindir)/$$n$(EXEEXT) $(DESTDIR)$(bindir)/$$ld$(EXEEXT) >/dev/null 2>/dev/null \
+	  || $(LIBTOOL) --mode=install $(INSTALL_PROGRAM) ld-new$(EXEEXT) $(DESTDIR)$(bindir)/$$ld$(EXEEXT); \
+	  if test "$(bindir)" != "$(tooldir)/bin"; then \
+	    rm -f $(DESTDIR)$(tooldir)/bin/ld$(EXEEXT); \
+	    ln $(DESTDIR)$(bindir)/$$n$(EXEEXT) $(DESTDIR)$(tooldir)/bin/ld$(EXEEXT) >/dev/null 2>/dev/null \
+	    || $(LIBTOOL) --mode=install $(INSTALL_PROGRAM) ld-new$(EXEEXT) $(DESTDIR)$(tooldir)/bin/ld$(EXEEXT); \
+	  fi; \
+  	fi
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(scriptdir)/ldscripts
 	for f in ldscripts/*; do \
