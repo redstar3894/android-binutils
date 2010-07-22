@@ -25,8 +25,25 @@
 # to verify if identical code folding in safe mode correctly folds
 # functions in a shared object.
 
+error_if_symbol_absent()
+{
+    if ! is_symbol_present $1 $2;
+    then
+      echo "Symbol" $2 "not present, possibly folded."
+      exit 1
+    fi
+}
+
+is_symbol_present()
+{
+    grep $2 $1 > /dev/null 2>&1
+    return $?
+}
+
 check_nofold()
 {
+    error_if_symbol_absent $1 $2
+    error_if_symbol_absent $1 $3
     func_addr_1=`grep $2 $1 | awk '{print $1}'`
     func_addr_2=`grep $3 $1 | awk '{print $1}'`
     if [ $func_addr_1 = $func_addr_2 ];
@@ -38,6 +55,16 @@ check_nofold()
 
 check_fold()
 {
+    if ! is_symbol_present $1 $2
+    then
+      return 0
+    fi
+
+    if ! is_symbol_present $1 $3
+    then
+      return 0
+    fi
+
     func_addr_1=`grep $2 $1 | awk '{print $1}'`
     func_addr_2=`grep $3 $1 | awk '{print $1}'`
     if [ $func_addr_1 != $func_addr_2 ];
@@ -49,21 +76,30 @@ check_fold()
 
 arch_specific_safe_fold()
 {
-    grep_x86_64=`grep -q "Advanced Micro Devices X86-64" $2`
-    if [ $? == 0 ];
+    if [ $1 == 0 ];
     then
-      check_fold $1 $3 $4
+      check_fold $2 $3 $4
     else
-      check_nofold $1 $3 $4
+      check_nofold $2 $3 $4
     fi
 }
 
-check_nofold icf_safe_so_test_1.stdout "foo_prot" "foo_hidden"
-check_nofold icf_safe_so_test_1.stdout "foo_prot" "foo_internal"
-check_nofold icf_safe_so_test_1.stdout "foo_prot" "foo_static"
-check_nofold icf_safe_so_test_1.stdout "foo_hidden" "foo_internal"
-check_nofold icf_safe_so_test_1.stdout "foo_hidden" "foo_static"
-check_nofold icf_safe_so_test_1.stdout "foo_internal" "foo_static"
-arch_specific_safe_fold icf_safe_so_test_1.stdout icf_safe_so_test_2.stdout \
-  "foo_glob" "bar_glob"
+X86_32_specific_safe_fold()
+{
+    grep -e "Intel 80386" $1 > /dev/null 2>&1
+    arch_specific_safe_fold $? $2 $3 $4
+}
 
+X86_64_specific_safe_fold()
+{
+    grep -e "Advanced Micro Devices X86-64" $1 > /dev/null 2>&1
+    arch_specific_safe_fold $? $2 $3 $4
+}
+
+X86_32_specific_safe_fold icf_safe_so_test_2.stdout icf_safe_so_test_1.stdout "foo_prot" "foo_hidden"
+X86_32_specific_safe_fold icf_safe_so_test_2.stdout icf_safe_so_test_1.stdout "foo_prot" "foo_internal"
+X86_32_specific_safe_fold icf_safe_so_test_2.stdout icf_safe_so_test_1.stdout "foo_prot" "foo_static"
+X86_32_specific_safe_fold icf_safe_so_test_2.stdout icf_safe_so_test_1.stdout "foo_hidden" "foo_internal"
+X86_32_specific_safe_fold icf_safe_so_test_2.stdout icf_safe_so_test_1.stdout "foo_hidden" "foo_static"
+X86_32_specific_safe_fold icf_safe_so_test_2.stdout icf_safe_so_test_1.stdout "foo_internal" "foo_static"
+check_nofold icf_safe_so_test_1.stdout "foo_glob" "bar_glob"

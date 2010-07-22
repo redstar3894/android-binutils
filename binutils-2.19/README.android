@@ -1,3 +1,83 @@
+2010-07-15  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream patches to enhance safe ICF and to fix
+	a linker crash and an EXIDX problem in the Linux kernel.
+
+	http://www.cygwin.com/ml/binutils-cvs/2010-06/msg00118.html
+	http://www.cygwin.com/ml/binutils-cvs/2010-06/msg00148.html
+	http://www.cygwin.com/ml/binutils-cvs/2010-07/msg00080.html
+
+	Changed file:
+	
+	gold/arm-reloc-property.cc
+	gold/arm-reloc-property.h
+	gold/arm.cc
+	gold/icf.h
+	gold/output.cc
+	gold/output.h
+	gold/target.h
+
+2010-07-09  Jing Yu  <jingyu@google.com>
+
+	Add support to androideabi target.
+	Backport the patch from binutils upstream.
+
+	Changed file:
+	config.sub
+
+2010-06-23  Doug Kwan  <dougkwan@google.com>
+
+	Add dummy --icf option to ld for compatiblity with gold.
+
+	Changed file:
+
+	ld/emultempl/armelf.em
+
+2010-06-19  Doug Kwan  <dougkwan@google.com>
+
+	Integrate CL 40547.
+
+	Changed files:
+
+	gold/gc.h
+	gold/i386.cc
+	gold/icf.cc
+	gold/icf.h
+	gold/symtab.cc
+	gold/symtab.h
+	gold/target-reloc.h
+	gold/testsuite/Makefile.am
+	gold/testsuite/Makefile.in
+	gold/testsuite/icf_preemptible_functions_test.cc
+	gold/testsuite/icf_preemptible_functions_test.sh
+	gold/testsuite/icf_safe_so_test.cc
+	gold/testsuite/icf_safe_so_test.sh
+	gold/testsuite/icf_safe_test.cc
+	gold/testsuite/icf_safe_test.sh
+	gold/testsuite/icf_string_merge_test.cc
+	gold/testsuite/icf_string_merge_test.sh
+	gold/testsuite/icf_virtual_function_folding_test.cc
+	gold/x86_64.cc
+
+2010-06-15  Doug Kwan  <dougkwan@google.com>
+
+	Fix ARM kernel build breakage due to merging EABI flags from
+	empty objects.  This is not yet up-stream.
+
+	Changed files:
+
+	gold/arm.cc
+
+2010-06-08  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream patch to fix too many stubs problem.
+
+	http://sourceware.org/ml/binutils-cvs/2010-06/msg00027.html
+
+	Changed files:
+
+	gold/arm.cc
+		
 2010-06-02  Doug Kwan  <dougkwan@google.com>
 
 	Backport upstream patches to support dual-linker configuration.

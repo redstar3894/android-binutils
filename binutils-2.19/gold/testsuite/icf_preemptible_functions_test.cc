@@ -1,4 +1,4 @@
-// icf_safe_so_test.cc -- a test case for gold
+// icf_preemptible_functions_test.cc -- a test case for gold
 
 // Copyright 2010 Free Software Foundation, Inc.
 // Written by Sriraman Tallam <tmsriram@google.com>.
@@ -20,55 +20,28 @@
 // Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-// The goal of this program is to verify if identical code folding
-// in safe mode correctly folds functions in a shared object. The
-// foo_* functions below should not be folded.  For x86-64,
-// foo_glob and bar_glob should be folded as their function pointers
-// are addresses of PLT entries in shared objects.  For 32-bit X86,
-// the hidden protected and internal symbols can be folded.
+// The goal of this program is to verify that preemptible functions are
+// correctly handled by ICF.  In this program, foo and bar should not
+// be folded although they are identical as zap or zip could be preempted.
 
-int  __attribute__ ((visibility ("protected")))
-foo_prot()
+int zap()
 {
-  return 1;
-}
-
-int __attribute__ ((visibility ("hidden")))
-foo_hidden()
-{
-  return 1;
-}
-
-int __attribute__ ((visibility ("internal")))
-foo_internal()
-{
-  return 1;
-}
-
-static int
-foo_static()
-{
-  return 1;
-}
-
-int foo_glob()
-{
-  return 2;
-}
-
-int bar_glob()
-{
-  return 2;
-}
-
-int main()
-{
-  int (*p)() = foo_glob;
-  (void)p;
-  foo_static();
-  foo_prot();
-  foo_hidden();
-  foo_internal();
   return 0;
 }
 
+int zip()
+{
+  return 0;
+}
+
+int foo()
+{
+  zap();
+  return 0;
+}
+
+int bar()
+{
+  zip();
+  return 0;
+}

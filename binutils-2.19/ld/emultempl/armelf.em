@@ -458,6 +458,7 @@ PARSE_AND_LIST_PROLOGUE='
 #define OPTION_NO_WCHAR_SIZE_WARNING	313
 #define OPTION_FIX_CORTEX_A8		314
 #define OPTION_NO_FIX_CORTEX_A8		315
+#define OPTION_ICF			399
 '
 
 PARSE_AND_LIST_SHORTOPTS=p
@@ -479,6 +480,7 @@ PARSE_AND_LIST_LONGOPTS='
   { "no-wchar-size-warning", no_argument, NULL, OPTION_NO_WCHAR_SIZE_WARNING},
   { "fix-cortex-a8", no_argument, NULL, OPTION_FIX_CORTEX_A8 },
   { "no-fix-cortex-a8", no_argument, NULL, OPTION_NO_FIX_CORTEX_A8 },
+  { "icf", required_argument, NULL, OPTION_ICF },
 '
 
 PARSE_AND_LIST_OPTIONS='
@@ -506,6 +508,7 @@ PARSE_AND_LIST_OPTIONS='
                            the linker should choose suitable defaults.\n"
  		   ));
   fprintf (file, _("  --[no-]fix-cortex-a8        Disable/enable Cortex-A8 Thumb-2 branch erratum fix\n"));
+  fprintf (file, _("  --icf=<value>               Ignored for compatibility with gold.\n"));
 '
 
 PARSE_AND_LIST_ARGS_CASES='
@@ -584,6 +587,10 @@ PARSE_AND_LIST_ARGS_CASES='
 
     case OPTION_NO_FIX_CORTEX_A8:
       fix_cortex_a8 = 0;
+      break;
+
+    case OPTION_ICF:
+      /* For compatibility with gold. */
       break;
 '
 

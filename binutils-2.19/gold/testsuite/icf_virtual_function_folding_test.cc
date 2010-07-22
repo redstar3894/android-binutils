@@ -1,4 +1,4 @@
-// icf_safe_so_test.cc -- a test case for gold
+// icf_virtual_function_folding_test.cc -- a test case for gold
 
 // Copyright 2010 Free Software Foundation, Inc.
 // Written by Sriraman Tallam <tmsriram@google.com>.
@@ -20,55 +20,51 @@
 // Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
-// The goal of this program is to verify if identical code folding
-// in safe mode correctly folds functions in a shared object. The
-// foo_* functions below should not be folded.  For x86-64,
-// foo_glob and bar_glob should be folded as their function pointers
-// are addresses of PLT entries in shared objects.  For 32-bit X86,
-// the hidden protected and internal symbols can be folded.
+// Foo::fn1 is folded into fn2 with ICF.  Since this file is linked as a
+// position independent executable, a dynamic reloc is needed
+// for the virtual call fn1 entry in the vtable.  This test makes sure
+// the call to Foo::fn1 works correctly after the folding.
 
-int  __attribute__ ((visibility ("protected")))
-foo_prot()
+int fn2(void *)
 {
-  return 1;
+  return 0xA;
 }
 
-int __attribute__ ((visibility ("hidden")))
-foo_hidden()
+namespace
 {
-  return 1;
+
+class Bar
+{
+ public:
+  virtual int fn1();
+};
+
+int Bar::fn1()
+{
+  return 123;
 }
 
-int __attribute__ ((visibility ("internal")))
-foo_internal()
+class Foo : public Bar
 {
-  return 1;
+  virtual int fn1();
+};
+
+int Foo::fn1()
+{
+  return 0xA;
 }
 
-static int
-foo_static()
+Bar* get()
 {
-  return 1;
+  Bar *f = new Foo();
+  return f;
 }
 
-int foo_glob()
-{
-  return 2;
-}
-
-int bar_glob()
-{
-  return 2;
-}
+} // end of anonymous namespace.
 
 int main()
 {
-  int (*p)() = foo_glob;
-  (void)p;
-  foo_static();
-  foo_prot();
-  foo_hidden();
-  foo_internal();
+  Bar *f = get();
+  f->fn1();
   return 0;
 }
-
