@@ -17167,7 +17167,7 @@ arm_frag_align_code (int n, int max)
       sprintf (err_msg,
         _("alignments greater than %d bytes not supported in .text sections."),
         MAX_MEM_FOR_RS_ALIGN_CODE + 1);
-      as_fatal (err_msg);
+      as_fatal ("%s", err_msg);
     }
 
   p = frag_var (rs_align_code,
