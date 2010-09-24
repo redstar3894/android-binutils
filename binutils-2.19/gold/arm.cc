@@ -1064,6 +1064,11 @@ class Arm_exidx_cantunwind : public Output_section_data
       this->do_fixed_endian_write<false>(of);
   }
 
+  // Write to a map file.
+  void
+  do_print_to_mapfile(Mapfile* mapfile) const
+  { mapfile->print_output_data(this, _("** ARM cantunwind")); }
+
  private:
   // Implement do_write for a given endianness.
   template<bool big_endian>
@@ -8199,7 +8204,8 @@ Target_arm<big_endian>::gc_process_relocs(Symbol_table* symtab,
   typedef Target_arm<big_endian> Arm;
   typedef typename Target_arm<big_endian>::Scan Scan;
 
-  gold::gc_process_relocs<32, big_endian, Arm, elfcpp::SHT_REL, Scan>(
+  gold::gc_process_relocs<32, big_endian, Arm, elfcpp::SHT_REL, Scan,
+			  Relocatable_size_for_reloc>(  
     symtab,
     layout,
     this,
@@ -8475,7 +8481,46 @@ Target_arm<big_endian>::Relocate::relocate(
   Arm_address thumb_bit = 0;
   Symbol_value<32> symval;
   bool is_weakly_undefined_without_plt = false;
-  if (relnum != Target_arm<big_endian>::fake_relnum_for_stubs)
+  bool have_got_offset = false;
+  unsigned int got_offset = 0;
+
+  // If the relocation uses the GOT entry of a symbol instead of the symbol
+  // itself, we don't care about whether the symbol is defined or what kind
+  // of symbol it is.
+  if (reloc_property->uses_got_entry())
+    {
+      // Get the GOT offset.
+      // The GOT pointer points to the end of the GOT section.
+      // We need to subtract the size of the GOT section to get
+      // the actual offset to use in the relocation.
+      // TODO: We should move GOT offset computing code in TLS relocations
+      // to here.
+      switch (r_type)
+	{
+	case elfcpp::R_ARM_GOT_BREL:
+	case elfcpp::R_ARM_GOT_PREL:
+	  if (gsym != NULL)
+	    {
+	      gold_assert(gsym->has_got_offset(GOT_TYPE_STANDARD));
+	      got_offset = (gsym->got_offset(GOT_TYPE_STANDARD)
+			    - target->got_size());
+	    }
+	  else
+	    {
+	      unsigned int r_sym = elfcpp::elf_r_sym<32>(rel.get_r_info());
+	      gold_assert(object->local_has_got_offset(r_sym,
+						       GOT_TYPE_STANDARD));
+	      got_offset = (object->local_got_offset(r_sym, GOT_TYPE_STANDARD)
+			    - target->got_size());
+	    }
+	  have_got_offset = true;
+	  break;
+
+	default:
+	  break;
+	}
+    }
+  else if (relnum != Target_arm<big_endian>::fake_relnum_for_stubs)
     {
       if (gsym != NULL)
 	{
@@ -8543,36 +8588,6 @@ Target_arm<big_endian>::Relocate::relocate(
       symval.set_output_value(stripped_value);
       psymval = &symval;
     } 
-
-  // Get the GOT offset if needed.
-  // The GOT pointer points to the end of the GOT section.
-  // We need to subtract the size of the GOT section to get
-  // the actual offset to use in the relocation.
-  bool have_got_offset = false;
-  unsigned int got_offset = 0;
-  switch (r_type)
-    {
-    case elfcpp::R_ARM_GOT_BREL:
-    case elfcpp::R_ARM_GOT_PREL:
-      if (gsym != NULL)
-	{
-	  gold_assert(gsym->has_got_offset(GOT_TYPE_STANDARD));
-	  got_offset = (gsym->got_offset(GOT_TYPE_STANDARD)
-			- target->got_size());
-	}
-      else
-	{
-	  unsigned int r_sym = elfcpp::elf_r_sym<32>(rel.get_r_info());
-	  gold_assert(object->local_has_got_offset(r_sym, GOT_TYPE_STANDARD));
-	  got_offset = (object->local_got_offset(r_sym, GOT_TYPE_STANDARD)
-			- target->got_size());
-	}
-      have_got_offset = true;
-      break;
-
-    default:
-      break;
-    }
 
   // To look up relocation stubs, we need to pass the symbol table index of
   // a local symbol.
@@ -10251,11 +10266,11 @@ Target_arm<big_endian>::merge_object_attributes(
 	    out_attr[i].set_int_value(in_attr[i].int_value());
 	  break;
 	case elfcpp::Tag_ABI_PCS_wchar_t:
-	  // FIXME: Make it possible to turn off this warning.
 	  if (out_attr[i].int_value()
 	      && in_attr[i].int_value()
 	      && out_attr[i].int_value() != in_attr[i].int_value()
-	      && parameters->options().warn_mismatch())
+	      && parameters->options().warn_mismatch()
+	      && parameters->options().wchar_size_warning())
 	    {
 	      gold_warning(_("%s uses %u-byte wchar_t yet the output is to "
 			     "use %u-byte wchar_t; use of wchar_t values "
@@ -10276,10 +10291,10 @@ Target_arm<big_endian>::merge_object_attributes(
 		  // Use whatever requirements the new object has.
 		  out_attr[i].set_int_value(in_attr[i].int_value());
 		}
-	      // FIXME: Make it possible to turn off this warning.
 	      else if (in_attr[i].int_value() != elfcpp::AEABI_enum_forced_wide
 		       && out_attr[i].int_value() != in_attr[i].int_value()
-		       && parameters->options().warn_mismatch())
+		       && parameters->options().warn_mismatch()
+		       && parameters->options().enum_size_warning())
 		{
 		  unsigned int in_value = in_attr[i].int_value();
 		  unsigned int out_value = out_attr[i].int_value();
@@ -10775,6 +10790,8 @@ Target_arm<big_endian>::scan_reloc_section_for_stubs(
 
       Symbol_value<32> symval;
       const Symbol_value<32> *psymval;
+      bool is_defined_in_discarded_section;
+      unsigned int shndx;
       if (r_sym < local_count)
 	{
 	  sym = NULL;
@@ -10786,45 +10803,53 @@ Target_arm<big_endian>::scan_reloc_section_for_stubs(
           // counterpart in the kept section.  The symbol must not 
           // correspond to a section we are folding.
 	  bool is_ordinary;
-	  unsigned int shndx = psymval->input_shndx(&is_ordinary);
-	  if (is_ordinary
-	      && shndx != elfcpp::SHN_UNDEF
-	      && !arm_object->is_section_included(shndx) 
-              && !(relinfo->symtab->is_section_folded(arm_object, shndx)))
+	  shndx = psymval->input_shndx(&is_ordinary);
+	  is_defined_in_discarded_section =
+	    (is_ordinary
+	     && shndx != elfcpp::SHN_UNDEF
+	     && !arm_object->is_section_included(shndx)
+	     && !relinfo->symtab->is_section_folded(arm_object, shndx));
+
+	  // We need to compute the would-be final value of this local
+	  // symbol.
+	  if (!is_defined_in_discarded_section)
 	    {
-	      if (comdat_behavior == CB_UNDETERMINED)
-	        {
-	          std::string name =
-		    arm_object->section_name(relinfo->data_shndx);
-	          comdat_behavior = get_comdat_behavior(name.c_str());
-	        }
-	      if (comdat_behavior == CB_PRETEND)
-	        {
-                  bool found;
-	          typename elfcpp::Elf_types<32>::Elf_Addr value =
-	            arm_object->map_to_kept_section(shndx, &found);
-	          if (found)
-	            symval.set_output_value(value + psymval->input_value());
-                  else
-                    symval.set_output_value(0);
-	        }
+	      typedef Sized_relobj<32, big_endian> ObjType;
+	      typename ObjType::Compute_final_local_value_status status =
+		arm_object->compute_final_local_value(r_sym, psymval, &symval,
+						      relinfo->symtab); 
+	      if (status == ObjType::CFLV_OK)
+		{
+		  // Currently we cannot handle a branch to a target in
+		  // a merged section.  If this is the case, issue an error
+		  // and also free the merge symbol value.
+		  if (!symval.has_output_value())
+		    {
+		      const std::string& section_name =
+			arm_object->section_name(shndx);
+		      arm_object->error(_("cannot handle branch to local %u "
+					  "in a merged section %s"),
+					r_sym, section_name.c_str());
+		    }
+		  psymval = &symval;
+		}
 	      else
-	        {
-                  symval.set_output_value(0);
-	        }
-	      symval.set_no_output_symtab_entry();
-	      psymval = &symval;
+		{
+		  // We cannot determine the final value.
+		  continue;  
+		}
 	    }
 	}
       else
 	{
-	  const Symbol* gsym = arm_object->global_symbol(r_sym);
+	  const Symbol* gsym;
+	  gsym = arm_object->global_symbol(r_sym);
 	  gold_assert(gsym != NULL);
 	  if (gsym->is_forwarder())
 	    gsym = relinfo->symtab->resolve_forwards(gsym);
 
 	  sym = static_cast<const Sized_symbol<32>*>(gsym);
-	  if (sym->has_symtab_index())
+	  if (sym->has_symtab_index() && sym->symtab_index() != -1U)
 	    symval.set_output_symtab_index(sym->symtab_index());
 	  else
 	    symval.set_no_output_symtab_entry();
@@ -10841,9 +10866,51 @@ Target_arm<big_endian>::scan_reloc_section_for_stubs(
 	  // Skip this if the symbol has not output section.
 	  if (status == Symbol_table::CFVS_NO_OUTPUT_SECTION)
 	    continue;
-
 	  symval.set_output_value(value);
+
+	  if (gsym->type() == elfcpp::STT_TLS)
+	    symval.set_is_tls_symbol();
 	  psymval = &symval;
+
+	  is_defined_in_discarded_section =
+	    (gsym->is_defined_in_discarded_section()
+	     && gsym->is_undefined());
+	  shndx = 0;
+	}
+
+      Symbol_value<32> symval2;
+      if (is_defined_in_discarded_section)
+	{
+	  if (comdat_behavior == CB_UNDETERMINED)
+	    {
+	      std::string name = arm_object->section_name(relinfo->data_shndx);
+	      comdat_behavior = get_comdat_behavior(name.c_str());
+	    }
+	  if (comdat_behavior == CB_PRETEND)
+	    {
+	      // FIXME: This case does not work for global symbols.
+	      // We have no place to store the original section index.
+	      // Fortunately this does not matter for comdat sections,
+	      // only for sections explicitly discarded by a linker
+	      // script.
+	      bool found;
+	      typename elfcpp::Elf_types<32>::Elf_Addr value =
+		arm_object->map_to_kept_section(shndx, &found);
+	      if (found)
+		symval2.set_output_value(value + psymval->input_value());
+	      else
+		symval2.set_output_value(0);
+	    }
+	  else
+	    {
+	      if (comdat_behavior == CB_WARNING)
+		gold_warning_at_location(relinfo, i, offset,
+					 _("relocation refers to discarded "
+					   "section"));
+	      symval2.set_output_value(0);
+	    }
+	  symval2.set_no_output_symtab_entry();
+	  psymval = &symval2;
 	}
 
       // If symbol is a section symbol, we don't know the actual type of

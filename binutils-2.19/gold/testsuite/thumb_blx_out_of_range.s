@@ -5,9 +5,9 @@
 	.section	.text.pre,"x"
 
 # Add padding so that target is just output of branch range. 
-	.space	6
+	.space	4
 
-	.global	_forward_target
+	.align	2
 	.global	_backward_target
 	.type	_backword_target, %function
 _backward_target:
@@ -15,6 +15,8 @@ _backward_target:
 	.size	_backward_target, .-_backward_target
 	
 	.text
+# Use 256-byte alignment so that we know where the stubs start.
+	.align	8
 
 # Define _start so that linker does not complain.
 	.align	2
@@ -41,12 +43,15 @@ _backward_test:
 _forward_test:
 	# Bit 1 of the BLX target comes from bit 1 of branch base address,
 	# which is BLX instruction's address + 4.  We intentionally put this
-	# forward BLX at an address n*4 + 2 so that the branch offset is
+	# _forward BLX at an address n*4 + 2 so that the branch offset is
 	# bumped up by 2.
 	nop.n
 	bl	_forward_target
 	.size	_forward_test, .-_forward_test
+
+# switch _back to ARM mode so that stubs are disassembled correctly.
 	.code	32
+	nop
 	
 	.section	.text.post,"x"
 

@@ -1,3 +1,208 @@
+2010-09-17  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream fix for mis-handling of GOT-using relocations
+	and two broken tests.
+
+	http://sourceware.org/ml/binutils-cvs/2010-09/msg00107.html
+
+	Changed files:
+
+	gold/arm.cc
+	gold/testsuite/icf_safe_so_test.sh
+	gold/testsuite/icf_safe_test.sh
+
+2010-09-15  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream fix for test regressions due to broken tests.
+
+	http://sourceware.org/ml/binutils-cvs/2010-09/msg00087.html
+
+	Changed files:
+
+	gold/testsuite/script_test_3.t
+	gold/testsuite/script_test_4.t
+	gold/testsuite/script_test_5.t
+	gold/testsuite/script_test_6.t
+	gold/testsuite/script_test_7.t
+
+2010-09-13  Jing Yu  <jingyu@google.com>
+
+	Backport upstream fixes for cortex-a8 workarounds.
+
+	http://sourceware.org/ml/binutils-cvs/2010-05/msg00025.html
+	http://sourceware.org/ml/binutils-cvs/2010-08/msg00154.html
+
+	Changed files:
+
+	bfd/elf32-arm.c
+	ld/testsuite/ld-arm/arm-elf.exp
+
+	Added files:
+
+	ld/testsuite/ld-arm/cortex-a8-fix-bl-rel-plt.d
+	ld/testsuite/ld-arm/cortex-a8-fix-blx-bcond.d
+	ld/testsuite/ld-arm/cortex-a8-fix-blx-bcond.s
+	
+2010-09-13  Jing Yu  <jingyu@google.com>
+
+	Backport upstream fix for barrier instructions' operand bug.
+
+	http://sourceware.org/ml/binutils/2010-07/msg00089.html
+
+	Changed files:
+
+	gas/config/tc-arm.c
+	opcodes/arm-dis.c
+
+	Added files:
+
+	gas/testsuite
+	  gas/arm/barrier.s
+	  gas/arm/barrier.d
+	  gas/arm/barrier-thumb.s
+	  gas/arm/barrier-thumb.d
+	  gas/arm/barrier-bad.s
+	  gas/arm/barrier-bad.d
+	  gas/arm/barrier-bad.l
+	  gas/arm/barrier-bad-thumb.s
+	  gas/arm/barrier-bad-thumb.d
+	  gas/arm/barrier-bad-thumb.l
+
+2010-09-12  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream fix for cortex-A8 workaround bug.
+
+	http://sourceware.org/ml/binutils-cvs/2010-09/msg00039.html
+
+	Changed files:
+
+	gold/arm.cc
+	gold/object.cc
+	gold/object.h
+	gold/testsuite/Makefile.am
+	gold/testsuite/Makefile.in
+	gold/testsuite/arm_bl_out_of_range.s
+	gold/testsuite/thumb_bl_out_of_range.s
+	gold/testsuite/thumb_blx_out_of_range.s
+
+	Added files:
+
+	gold/testsuite/arm_branch_out_of_range.sh
+	gold/testsuite/arm_cortex_a8.sh
+	gold/testsuite/arm_cortex_a8_b.s
+	gold/testsuite/arm_cortex_a8_b_cond.s
+	gold/testsuite/arm_cortex_a8_b_local.s
+	gold/testsuite/arm_cortex_a8_bl.s
+	gold/testsuite/arm_cortex_a8_blx.s
+	gold/testsuite/arm_cortex_a8_local.s
+	gold/testsuite/arm_cortex_a8_local_reloc.s
+	gold/testsuite/thumb_bl_out_of_range_local.s
+
+2010-08-30  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream fix for dynamic weak reference bug.
+
+	http://sourceware.org/ml/binutils-cvs/2010-08/msg00172.html
+
+	Changed files:
+	
+	gold/resolve.cc
+	gold/testsuite/Makefile.am
+	gold/testsuite/Makefile.in
+
+	Added files:
+
+	gold/testsuite/dyn_weak_ref.sh
+	gold/testsuite/dyn_weak_ref_1.c
+	gold/testsuite/dyn_weak_ref_2.c
+
+2010-08-23  Doug Kwan  <dougkwan@google.com>
+
+	P4 integrate CL 42476-p2 to fix OOM problem reported
+	by the Android team.
+
+	Changed files:
+	gold/merge.cc
+	gold/merge.h
+
+2010-08-20  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream fix for x86 test failure.
+
+	http://sourceware.org/ml/binutils-cvs/2010-08/msg00009.html
+
+	Changed files:
+
+	gold/i386.cc
+	gold/x86_64.cc
+
+2010-08-13  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream fix 
+
+	http://sourceware.org/ml/binutils-cvs/2010-08/msg00085.html
+
+	for weak symbol handling.
+
+	Changed files:
+
+	gold/resolve.cc
+	gold/symtab.cc
+	gold/testsuite/Makefile.am
+	gold/testsuite/Makefile.in
+	gold/testsuite/strong_ref_weak_def.sh
+	gold/testsuite/strong_ref_weak_def_1.c
+	gold/testsuite/strong_ref_weak_def_2.c
+
+2010-08-12  Doug Kwan  <dougkwan@google.com>
+
+	Backport up-stream patch
+
+	http://sourceware.org/ml/binutils-cvs/2010-08/msg00079.html
+
+	Changed files:
+	gold/arm.cc
+	gold/options.h
+
+2010-08-11  Doug Kwan  <dougkwan@google.com>
+
+	P4 integrate CL 42145-p2, which is a back-port of
+	http://sourceware.org/ml/binutils/2010-07/msg00086.html
+	from trunk.
+
+	Changed files:
+
+	gold/resolve.cc
+	gold/symtab.cc
+	gold/symtab.h
+	gold/testsuite/weak_undef_file1.cc
+	gold/testsuite/weak_undef_file2.cc
+	gold/testsuite/weak_undef_test.cc
+	
+2010-07-30  Sriraman Tallam  <tmsriram@google.com>
+
+	Patch to fix bug b/2842902. Fix submitted upstream and pulled down.
+	Please refer to : 
+	http://sourceware.org/ml/binutils/2010-07/msg00447.html
+	Fix was submitted at CL : 42629-p2.
+
+	Changed files:
+
+	gold/arm.cc
+	gold/gc.h
+	gold/i386.cc
+	gold/icf.cc
+	gold/icf.h
+	gold/int_encoding.h
+	gold/powerpc.cc
+	gold/sparc.cc
+	gold/testsuite/Makefile.am
+	gold/testsuite/Makefile.in
+	gold/testsuite/icf_sht_rel_addend_test.sh
+	gold/testsuite/icf_sht_rel_addend_test_1.cc
+	gold/testsuite/icf_sht_rel_addend_test_2.cc
+	gold/x86_64.cc
+
 2010-07-15  Doug Kwan  <dougkwan@google.com>
 
 	Backport upstream patches to enhance safe ICF and to fix

@@ -220,6 +220,18 @@ icf_string_merge_test: icf_string_merge_test.o gcctestdir/ld
 icf_string_merge_test.stdout: icf_string_merge_test
 	$(TEST_NM) icf_string_merge_test > icf_string_merge_test.stdout
 
+check_SCRIPTS += icf_sht_rel_addend_test.sh
+check_DATA += icf_sht_rel_addend_test.stdout
+MOSTLYCLEANFILES += icf_sht_rel_addend_test
+icf_sht_rel_addend_test_1.o: icf_sht_rel_addend_test_1.cc
+	$(CXXCOMPILE) -O0 -c -ffunction-sections -fPIC -g -o $@ $<
+icf_sht_rel_addend_test_2.o: icf_sht_rel_addend_test_2.cc
+	$(CXXCOMPILE) -O0 -c -ffunction-sections -fPIC -g -o $@ $<
+icf_sht_rel_addend_test: icf_sht_rel_addend_test_1.o icf_sht_rel_addend_test_2.o gcctestdir/ld
+	$(CXXLINK) -Bgcctestdir/ -Wl,--icf=all icf_sht_rel_addend_test_1.o icf_sht_rel_addend_test_2.o
+icf_sht_rel_addend_test.stdout: icf_sht_rel_addend_test
+	$(TEST_NM) icf_sht_rel_addend_test > icf_sht_rel_addend_test.stdout
+
 check_PROGRAMS += basic_test
 check_PROGRAMS += basic_static_test
 check_PROGRAMS += basic_pic_test
@@ -1416,6 +1428,43 @@ no_version_test.o: no_version_test.c
 no_version_test.stdout: libno_version_test.so
 	$(TEST_OBJDUMP) -h $< > $@
 
+# Test that strong reference to a weak symbol in a DSO remains strong.
+check_SCRIPTS += strong_ref_weak_def.sh
+check_DATA += strong_ref_weak_def.stdout
+MOSTLYCLEANFILES += strong_ref_weak_def_1.so strong_ref_weak_def_2.so \
+	strong_ref_weak_def.stdout
+strong_ref_weak_def_2.o: strong_ref_weak_def_2.c
+	$(COMPILE) -o $@ -c -fPIC $<
+strong_ref_weak_def_2.so: strong_ref_weak_def_2.o gcctestdir/ld
+	gcctestdir/ld -shared -o $@ strong_ref_weak_def_2.o
+strong_ref_weak_def_1.o: strong_ref_weak_def_1.c
+	$(COMPILE) -o $@ -c -fPIC $<
+strong_ref_weak_def_1.so: strong_ref_weak_def_1.o strong_ref_weak_def_2.so \
+	gcctestdir/ld
+	gcctestdir/ld -shared -o $@ strong_ref_weak_def_1.o \
+		strong_ref_weak_def_2.so
+strong_ref_weak_def.stdout: strong_ref_weak_def_1.so
+	$(TEST_READELF) -sWD $< > $@
+
+# Test that a strong weak reference remains strong if there is another
+# weak reference in a DSO.
+check_SCRIPTS += dyn_weak_ref.sh
+check_DATA += dyn_weak_ref.stdout
+MOSTLYCLEANFILES += dyn_weak_ref_1.so dyn_weak_ref_2.so \
+	dyn_weak_ref.stdout
+dyn_weak_ref_2.o: dyn_weak_ref_2.c
+	$(COMPILE) -o $@ -c -fPIC $<
+dyn_weak_ref_2.so: dyn_weak_ref_2.o gcctestdir/ld
+	gcctestdir/ld -shared -o $@ dyn_weak_ref_2.o
+dyn_weak_ref_1.o: dyn_weak_ref_1.c
+	$(COMPILE) -o $@ -c -fPIC $<
+# We intentionally put dyn_weak_ref_2.so in front of dyn_weak_ref_1.o
+# so that the weak ref there goes to gold's symbol table first.
+dyn_weak_ref_1.so: dyn_weak_ref_1.o dyn_weak_ref_2.so gcctestdir/ld
+	gcctestdir/ld -shared -o $@ dyn_weak_ref_2.so dyn_weak_ref_1.o
+dyn_weak_ref.stdout: dyn_weak_ref_1.so
+	$(TEST_READELF) -sWD $< > $@
+
 endif GCC
 endif NATIVE_LINKER
 
@@ -1512,12 +1561,13 @@ arm_abs_global.stdout: arm_abs_global
 
 MOSTLYCLEANFILES += arm_abs_global
 
-check_SCRIPTS += arm_branch_in_range.sh
+check_SCRIPTS += arm_branch_in_range.sh arm_branch_out_of_range.sh
 check_DATA += arm_bl_in_range.stdout arm_bl_out_of_range.stdout \
 	thumb_bl_in_range.stdout thumb_bl_out_of_range.stdout \
 	thumb2_bl_in_range.stdout thumb2_bl_out_of_range.stdout \
 	thumb_blx_in_range.stdout thumb_blx_out_of_range.stdout \
-	thumb2_blx_in_range.stdout thumb2_blx_out_of_range.stdout
+	thumb2_blx_in_range.stdout thumb2_blx_out_of_range.stdout \
+	thumb_bl_out_of_range_local.stdout
 
 arm_bl_in_range.stdout: arm_bl_in_range
 	$(TEST_OBJDUMP) -D $< > $@
@@ -1609,10 +1659,19 @@ thumb2_blx_out_of_range: thumb2_blx_out_of_range.o ../ld-new
 thumb2_blx_out_of_range.o: thumb_blx_out_of_range.s
 	$(TEST_AS) -o $@ -march=armv7-a $<
 
+thumb_bl_out_of_range_local.stdout: thumb_bl_out_of_range_local
+	$(TEST_OBJDUMP) -D $< > $@
+
+thumb_bl_out_of_range_local: thumb_bl_out_of_range_local.o ../ld-new
+	../ld-new -T $(srcdir)/thumb_branch_range.t -o $@ $<
+
+thumb_bl_out_of_range_local.o: thumb_bl_out_of_range_local.s
+	$(TEST_AS) -o $@ -march=armv5te $<
+
 MOSTLYCLEANFILES += arm_bl_in_range arm_bl_out_of_range thumb_bl_in_range \
 	thumb_bl_out_of_range thumb2_bl_in_range thumb2_bl_out_of_range \
 	thumb_blx_in_range thumb_blx_out_of_range thumb2_blx_in_range \
-	thumb2_blx_out_of_range
+	thumb2_blx_out_of_range thumb_bl_out_of_range_local
 
 check_SCRIPTS += arm_fix_v4bx.sh
 check_DATA += arm_fix_v4bx.stdout arm_fix_v4bx_interworking.stdout \
@@ -1640,5 +1699,69 @@ arm_no_fix_v4bx: arm_fix_v4bx.o ../ld-new
 	../ld-new -o $@ $<
 
 MOSTLYCLEANFILES += arm_fix_v4bx arm_fix_v4bx_interworking arm_no_fix_v4bx
+
+# Cortex-A8 workaround test.
+
+check_SCRIPTS += arm_cortex_a8.sh
+check_DATA += arm_cortex_a8_b_cond.stdout arm_cortex_a8_b.stdout \
+	arm_cortex_a8_bl.stdout arm_cortex_a8_blx.stdout \
+	arm_cortex_a8_local.stdout arm_cortex_a8_local_reloc.stdout
+
+arm_cortex_a8_b_cond.stdout: arm_cortex_a8_b_cond
+	$(TEST_OBJDUMP) -D -j.text $< > $@
+
+arm_cortex_a8_b_cond: arm_cortex_a8_b_cond.o ../ld-new
+	../ld-new -o $@ $<
+
+arm_cortex_a8_b_cond.o: arm_cortex_a8_b_cond.s
+	$(TEST_AS) -o $@ $<
+
+arm_cortex_a8_b.stdout: arm_cortex_a8_b
+	$(TEST_OBJDUMP) -D -j.text $< > $@
+
+arm_cortex_a8_b: arm_cortex_a8_b.o ../ld-new
+	../ld-new --fix-cortex-a8 -o $@ $<
+
+arm_cortex_a8_b.o: arm_cortex_a8_b.s
+	$(TEST_AS) -o $@ $<
+
+arm_cortex_a8_bl.stdout: arm_cortex_a8_bl
+	$(TEST_OBJDUMP) -D -j.text $< > $@
+
+arm_cortex_a8_bl: arm_cortex_a8_bl.o ../ld-new
+	../ld-new -o $@ $<
+
+arm_cortex_a8_bl.o: arm_cortex_a8_bl.s
+	$(TEST_AS) -o $@ $<
+
+arm_cortex_a8_blx.stdout: arm_cortex_a8_blx
+	$(TEST_OBJDUMP) -D -j.text $< > $@
+
+arm_cortex_a8_blx: arm_cortex_a8_blx.o ../ld-new
+	../ld-new -o $@ $<
+
+arm_cortex_a8_blx.o: arm_cortex_a8_blx.s
+	$(TEST_AS) -o $@ $<
+
+arm_cortex_a8_local.stdout: arm_cortex_a8_local
+	$(TEST_OBJDUMP) -D -j.text $< > $@
+
+arm_cortex_a8_local: arm_cortex_a8_local.o ../ld-new
+	../ld-new -o $@ $<
+
+arm_cortex_a8_local.o: arm_cortex_a8_local.s
+	$(TEST_AS) -o $@ $<
+
+arm_cortex_a8_local_reloc.stdout: arm_cortex_a8_local_reloc
+	$(TEST_OBJDUMP) -D -j.text $< > $@
+
+arm_cortex_a8_local_reloc: arm_cortex_a8_local_reloc.o ../ld-new
+	../ld-new -o $@ $<
+
+arm_cortex_a8_local_reloc.o: arm_cortex_a8_local_reloc.s
+	$(TEST_AS) -o $@ $<
+
+MOSTLYCLEANFILES += arm_cortex_a8_b_cond arm_cortex_a8_b arm_cortex_a8_bl \
+	arm_cortex_a8_blx arm_cortex_a8_local arm_cortex_a8_local_reloc
 
 endif DEFAULT_TARGET_ARM

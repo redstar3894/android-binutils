@@ -2370,9 +2370,10 @@ struct a8_erratum_fix {
 struct a8_erratum_reloc {
   bfd_vma from;
   bfd_vma destination;
+  struct elf32_arm_link_hash_entry *hash;
+  const char *sym_name;
   unsigned int r_type;
   unsigned char st_type;
-  const char *sym_name;
   bfd_boolean non_a8_stub;
 };
 
@@ -3388,6 +3389,36 @@ static bfd_reloc_status_type elf32_arm_final_link_relocate
    Elf_Internal_Rela *, bfd_vma, struct bfd_link_info *, asection *,
    const char *, int, struct elf_link_hash_entry *, bfd_boolean *, char **);
 
+static unsigned int
+arm_stub_required_alignment (enum elf32_arm_stub_type stub_type)
+{
+  switch (stub_type)
+    {
+    case arm_stub_a8_veneer_b_cond:
+    case arm_stub_a8_veneer_b:
+    case arm_stub_a8_veneer_bl:
+      return 2;
+
+    case arm_stub_long_branch_any_any:
+    case arm_stub_long_branch_v4t_arm_thumb:
+    case arm_stub_long_branch_thumb_only:
+    case arm_stub_long_branch_v4t_thumb_thumb:
+    case arm_stub_long_branch_v4t_thumb_arm:
+    case arm_stub_short_branch_v4t_thumb_arm:
+    case arm_stub_long_branch_any_arm_pic:
+    case arm_stub_long_branch_any_thumb_pic:
+    case arm_stub_long_branch_v4t_thumb_thumb_pic:
+    case arm_stub_long_branch_v4t_arm_thumb_pic:
+    case arm_stub_long_branch_v4t_thumb_arm_pic:
+    case arm_stub_long_branch_thumb_only_pic:
+    case arm_stub_a8_veneer_blx:
+      return 4;
+    
+    default:
+      abort ();  /* Should be unreachable.  */
+    }
+}
+
 static bfd_boolean
 arm_build_one_stub (struct bfd_hash_entry *gen_entry,
 		    void * in_arg)
@@ -3420,9 +3451,8 @@ arm_build_one_stub (struct bfd_hash_entry *gen_entry,
   stub_sec = stub_entry->stub_sec;
 
   if ((htab->fix_cortex_a8 < 0)
-      != (stub_entry->stub_type >= arm_stub_a8_veneer_lwm))
-    /* We have to do the a8 fixes last, as they are less aligned than
-       the other veneers.  */
+      != (arm_stub_required_alignment (stub_entry->stub_type) == 2))
+    /* We have to do less-strictly-aligned fixes last.  */
     return TRUE;
   
   /* Make a note of the offset within the stubs for this entry.  */
@@ -3989,6 +4019,7 @@ cortex_a8_erratum_scan (bfd *input_bfd,
 		    {
 		      char *error_message = NULL;
 		      struct elf_link_hash_entry *entry;
+		      bfd_boolean use_plt = FALSE;
 
 		      /* We don't care about the error returned from this
 		         function, only if there is glue or not.  */
@@ -3998,12 +4029,18 @@ cortex_a8_erratum_scan (bfd *input_bfd,
 		      if (entry)
 			found->non_a8_stub = TRUE;
 
-		      if (found->r_type == R_ARM_THM_CALL
-			  && found->st_type != STT_ARM_TFUNC)
-			force_target_arm = TRUE;
-		      else if (found->r_type == R_ARM_THM_CALL
-			       && found->st_type == STT_ARM_TFUNC)
-			force_target_thumb = TRUE;
+		      /* Keep a simpler condition, for the sake of clarity.  */
+		      if (htab->splt != NULL && found->hash != NULL
+			  && found->hash->root.plt.offset != (bfd_vma) -1)
+			use_plt = TRUE;
+
+		      if (found->r_type == R_ARM_THM_CALL)
+			{
+			  if (found->st_type != STT_ARM_TFUNC || use_plt)
+			    force_target_arm = TRUE;
+			  else
+			    force_target_thumb = TRUE;
+			}
 		    }
 
                   /* Check if we have an offending branch instruction.  */
@@ -4544,6 +4581,7 @@ elf32_arm_size_stubs (bfd *output_bfd,
                           a8_relocs[num_a8_relocs].st_type = st_type;
                           a8_relocs[num_a8_relocs].sym_name = sym_name;
                           a8_relocs[num_a8_relocs].non_a8_stub = created_stub;
+                          a8_relocs[num_a8_relocs].hash = hash;
 
                           num_a8_relocs++;
                         }
@@ -12457,7 +12495,7 @@ make_branch_to_a8_stub (struct bfd_hash_entry *gen_entry,
   data = (struct a8_branch_to_stub_data *) in_arg;
 
   if (stub_entry->target_section != data->writing_section
-      || stub_entry->stub_type < arm_stub_a8_veneer_b_cond)
+      || stub_entry->stub_type < arm_stub_a8_veneer_lwm)
     return TRUE;
 
   contents = data->contents;
