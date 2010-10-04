@@ -1,3 +1,17 @@
+2010-09-28  Sriraman Tallam  <tmsriram@google.com>
+
+	Backport upstream fix to disable inlining of merge section in ICF for
+	ARM back end.
+
+	http://sourceware.org/ml/binutils/2010-09/msg00492.html
+
+	Changed files:
+
+	gold/target.h
+	gold/i386.cc
+	gold/x86_64.cc
+	gold/icf.cc
+
 2010-09-17  Doug Kwan  <dougkwan@google.com>
 
 	Backport upstream fix for mis-handling of GOT-using relocations
