@@ -1,3 +1,29 @@
+2010-10-28  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream fix in disassembler to handle mapping
+	symbol properly.
+
+	http://www.cygwin.com/ml/binutils-cvs/2009-03/msg00242.html
+
+	Changed file:
+
+	opcodes/arm-dis.c
+
+	Added files:
+
+	gas/testsuite/gas/arm/mapsecs.d
+	gas/testsuite/gas/arm/mapsecs.s
+
+2010-09-29  Doug Kwan  <dougkwan@google.com>
+
+	Backport upstream fix in assembler.  This is required for LIPO.
+
+	http://sourceware.org/ml/binutils-cvs/2010-09/msg00204.html
+
+	Changed files:
+
+	gas/expr.c
+
 2010-09-28  Sriraman Tallam  <tmsriram@google.com>
 
 	Backport upstream fix to disable inlining of merge section in ICF for
