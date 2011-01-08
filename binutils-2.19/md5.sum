@@ -38,7 +38,7 @@ b7ad288235bf6a3e015e01cb6096cbe7  bfd/ChangeLog-9697
 dbb0d89c90d6c0ec79eb003a5b63f923  bfd/ChangeLog-9899
 d618facc3e8ce8bf3d02ba452e1be6ab  bfd/MAINTAINERS
 02230b383322ce93d12d75493b5e1e43  bfd/Makefile.in
-f89440d4a53089529d031f604d9eddf8  bfd/configure
+6c81c180924bd80f91d902512c258dd6  bfd/configure
 6455e3c85b31e588ecb75f7d3c945c8d  bfd/PORTING
 2d6a5be3f5d1b33251fe9a8570e943d8  bfd/README
 cd26654c6eb30680694867e434e40044  bfd/TODO
@@ -89,7 +89,7 @@ b1848292a4811cd7301fc6201debe63a  bfd/doc/aoutx.texi
 a8c2c8dd8cfb3224c942a7f58d9fa8a1  bfd/doc/bfdt.texi
 4b33b6b08bb48adc10e22145f85589fb  bfd/doc/archures.texi
 2afdf80182d7d816eb993fe194d378a3  bfd/doc/cache.texi
-f121095404aa26155d1eae244a168c73  bfd/doc/bfdver.texi
+08f7405617d2e7599a3c3fae1bc06d3b  bfd/doc/bfdver.texi
 4bdaf36b0c11f0b77d1cc779bdb97c91  bfd/doc/core.texi
 c60b298f07f5a175f2325d48bd009bdb  bfd/doc/elf.texi
 d41d8cd98f00b204e9800998ecf8427e  bfd/doc/elfcode.texi
@@ -153,7 +153,7 @@ fe345d7d9614f21682d879793ecbdd90  bfd/coff64-rs6000.c
 9638d42f61f8e51f100043a25939d1e0  bfd/compress.c
 42fc088946ad7edf6ecc6164356375c8  bfd/config.bfd
 35edceb888cfaaf5b24f541150485224  bfd/config.in
-ec1762378d3d7e75f9981006554dc3cb  bfd/ChangeLog
+200140aca1c32a50a4141390290188d9  bfd/ChangeLog
 35a4480c592584b75a828838b20938a0  bfd/po/da.gmo
 d900f09c506ad5057a3fddd39e3fab7c  bfd/po/BLD-POTFILES.in
 bc54a6c80e6f68f624f5a6b4cebd6bf6  bfd/po/Make-in
@@ -273,11 +273,11 @@ f502a33bedc49b06796b96dd5f94e375  bfd/elf-eh-frame.c
 80271019a0bbb737af67e29976d2e94e  bfd/elf-strtab.c
 66dfab58767be25c87a3f8297e52379d  bfd/elf-vxworks.c
 fcece4ec5829cd7a597209c75aac00c8  bfd/elf-vxworks.h
-961593019af8dd063c99a08990de738e  bfd/elf.c
+bbb7d34bd7df4c962123fb1913cae58f  bfd/elf.c
 42c1efc1918415fca01b5679c884cc7c  bfd/elf32-am33lin.c
 9d03e5cc8b0719b6fdb483746ba834a0  bfd/elf32-arc.c
-6abe448f958aef3ee89575924a16a7d2  bfd/elf32-arm.c
-04ee0bd26731f6f94c8d058936787fea  bfd/elf32-avr.c
+75efe1f0e2dc13c955ff4e51ee1d87c4  bfd/elf32-arm.c
+34dab0e00420ee0e818692deeb8a500e  bfd/elf32-avr.c
 f6846e8628e2f26f82fea28151906429  bfd/elf32-avr.h
 47b944a44194867c3468ea69a23a3f3c  bfd/elf32-bfin.c
 3f892d5e165c6097e661b797515669ac  bfd/elf32-cr16.c
@@ -315,7 +315,7 @@ d038457db9c0f9da584010c26abeb657  bfd/elf32-mt.c
 12c4270a4084fed5b8b6fa038bd0cb3c  bfd/elf32-openrisc.c
 468e5e58c80e985dfbfa201ce07fe4ba  bfd/elf32-or32.c
 140b65ea1bdd039c81067900b5124da8  bfd/elf32-pj.c
-2b94a73ad4a7fa5b7f839d8bb68f375d  bfd/elf32-ppc.c
+a2b5ff4c903a7addf095cf392ba28b70  bfd/elf32-ppc.c
 f854f7a23ce07444b5bed5d3a37c1e70  bfd/elf32-ppc.h
 d6bd27a534e198b868f6964885649d93  bfd/elf32-s390.c
 69ca707013e419bd996194319a49abed  bfd/elf32-score.c
@@ -483,7 +483,7 @@ d34b676b52cca72a65f80aeee196d0dd  bfd/vax1knetbsd.c
 b8003ae4d166819093bf96bc13ad2023  bfd/vaxbsd.c
 5bb97ac813578d24e257cd46d17809ba  bfd/vaxnetbsd.c
 54e368663e3a9ea8b03d0759110ecc23  bfd/versados.c
-156cc1f23f2a67893e924c69d57edf2a  bfd/version.h
+0ffd3ad9e8377022756579cff3499920  bfd/version.h
 5bd41598a2d2f1be4742692c5b0219b5  bfd/vms-gsd.c
 4c6703ae91f6d82783c9f29266f26234  bfd/vms-hdr.c
 2bb23ccf0263f7e4efe08764f00c3f29  bfd/vms-misc.c
@@ -497,7 +497,7 @@ f7fb6965a3fb9d1cdb0fd18220d2e47d  bfd/xcofflink.c
 11213bf58c2136189edd119d00671f00  bfd/xsym.h
 f86234230ea7107543f18b4abd37500b  bfd/xtensa-isa.c
 65bcd88cdd329e4d5f1e971822b19c0c  bfd/xtensa-modules.c
-36ac13941f12d18b863fdac7258a0165  bfd/configure.in
+be82c858b8f95a5ea221e92212b027f4  bfd/configure.in
 27593fe986db44e4f4d86da9a4893aeb  binutils/doc/Makefile.am
 6438a16c82585f3b8099ef4655c1511d  binutils/doc/Makefile.in
 9e959ec1aa21bd05f99da2a6ae069ae0  binutils/doc/binutils.texi
@@ -552,7 +552,7 @@ f5bcb1c5bfa3902f840e5efc8bfa5b81  binutils/po/ru.gmo
 4c57a9a18cfc80f61d50b29eb703d561  binutils/po/zh_CN.gmo
 d66dc645567221704d9a96af2951ec0f  binutils/po/zh_TW.gmo
 e531e05e52412093aba62e8529d3dd49  binutils/BRANCHES
-ac9d44916b7e80ed9d3e0e2bab9c4020  binutils/ChangeLog
+8bd4a7ba1d18dd35f9522e19675bcf0b  binutils/ChangeLog
 75f03b546abf41db936b3eae9ee79760  binutils/ChangeLog-0001
 ac9c338a84bd8da1d3be610a39a75c38  binutils/ChangeLog-0203
 e3940b38e6baee310a1565e098d2d9ba  binutils/ChangeLog-2004
@@ -593,7 +593,7 @@ ce4b0ac935f4adacf1099aac6ad96776  binutils/config.in
 258331420edaa38a130ec1fabe6943d7  binutils/deflex.l
 289c16c03bd0a5635985188b7f12e6ea  binutils/defparse.y
 6a1aa45234cb503771f22ae15efc0f2c  binutils/dep-in.sed
-9849cecfb97702f80e4be783dab090ae  binutils/dlltool.c
+66e36721bc3fc0883212b6bf196c1bf4  binutils/dlltool.c
 52e2e0a05ec5d5693ac0288e26527f9a  binutils/dlltool.h
 1de7fee09a3817d8e4fd6a411d5c1e55  binutils/dllwrap.c
 99d1c87348048e2553e52f6f8b32288c  binutils/dwarf.c
@@ -645,7 +645,7 @@ b3669a390c553395b6151cf5173663dd  binutils/sysroff.info
 188dd4f5d4bc4c112c8c34fa75097068  binutils/unwind-ia64.h
 b888af63fcfda2fc8551893f9dfa80ed  binutils/version.c
 6f04a867b4162f787fb1781f3ae2a83a  binutils/windint.h
-da48a630357f20ce596c49aa51db4c6c  binutils/windmc.c
+f442d0fde84d288d0e36b4f6eb1a378f  binutils/windmc.c
 4a301e97590dbfcc2f7e9c2850ba1bff  binutils/windmc.h
 ae273cc3da6ea43a6589d7ac12b07cd9  binutils/windres.c
 906f283c22c019d009b11770338477aa  binutils/windres.h
@@ -1012,7 +1012,7 @@ cd83d049ba6dd7eac90d004a5069a2b6  gas/config/tc-mcore.c
 22dce6a65547b031a610f2d96397ea87  gas/config/tc-mcore.h
 836e023d48ebbe074c47563c96410449  gas/config/tc-mep.c
 d6341517bf77615f1f1603df07c70206  gas/config/tc-mep.h
-4b8fd5129a9475130a5da46be33e0707  gas/config/tc-mips.c
+564c069931202e4aa35c09151640e956  gas/config/tc-mips.c
 3098783bc1330f77ee4f1be440b21665  gas/config/tc-mips.h
 c33e919e0ccff6628d075be8eec5c679  gas/config/tc-mmix.c
 6a251a02f0d127cbeee8303079cf71dc  gas/config/tc-mmix.h
@@ -1112,7 +1112,7 @@ ae1729e2bb0d6c0564b515f993ac7f13  gas/config/xtensa-relax.c
 ee8de9cf71dcc35a1d9bbd5ade4f0d76  gas/config/te-solaris.h
 53db0ab868dc9516af2c5ab97a8450f0  gas/CONTRIBUTORS
 d32239bcb673463ab874e80d47fae504  gas/COPYING
-b1a6614d2a9e48373a235aea1e1e9f28  gas/ChangeLog
+40b2386af966022d09a9f169252e5d2b  gas/ChangeLog
 ffefbc0a746d455b0fc30fcb92cf820b  gas/ChangeLog-0001
 7625b084c87a7ae4de541a6bbf88fe45  gas/ChangeLog-0203
 7ee4a40be5732a4dc9b8f09dd534dffa  gas/ChangeLog-2004
@@ -1123,14 +1123,15 @@ dffe97ca199bdf63f3723ad11826e60c  gas/ChangeLog-2007
 2ca0a735423063fa9757a564336be2f4  gas/ChangeLog-9697
 e6aed0ab8c1b1b6bcfdae6d97862b880  gas/ChangeLog-9899
 d618facc3e8ce8bf3d02ba452e1be6ab  gas/MAINTAINERS
-941dd584ef99bf6460c22ec4b519faae  gas/Makefile.am
-1bbd663108d0b17867ad6d59743aa7d5  gas/Makefile.in
+784551dc1ce033969244c93adeeed345  gas/Makefile.am
+fa1f4c0314b1333991cc26be915be784  gas/Makefile.in
 8578664879818304e4efcec982cd3235  gas/NEWS
 7d90db3f78994d389f96376160c78e79  gas/README
 41e29feacddfc18d0a64ae0084319697  gas/acinclude.m4
 68031c11e9810aab73f345106d75bd19  gas/aclocal.m4
 d77f26eb9c74f2ead15089b9f466f364  gas/app.c
 47473dca8f94de2de0e5842b048036ea  gas/as.c
+e577cec29aa06ca106aff705214c2627  gas/ehopt.c
 ad6e009680755c9297d4af220cb80934  gas/as.h
 e25637964415c4475a64a2a5c7cb963b  gas/asintl.h
 51ce9f284ca1d90dad3041e03a10acac  gas/atof-generic.c
@@ -1146,13 +1147,12 @@ e4e04b25ac200f9da5140379d25ed364  gas/configure.tgt
 6d0569055d44d0f97c1e1702be38e606  gas/debug.c
 12c785802f870b496877bd8b942c5e8b  gas/dep-in.sed
 fdc62a08d3bf358495e7dddb6f080eb0  gas/depend.c
-7da98b30cd4adad9e30add76a227a665  gas/dw2gencfi.c
+638044fda26b7ee7fe916ebc1a87b679  gas/dw2gencfi.c
 8acc6efe425696861ed82e7d2b8a55a0  gas/dw2gencfi.h
 1090ab888a8b42a2c0d7b6807fc2fd02  gas/dwarf2dbg.c
 368bb77dc23c4424d2c3c19fd031c54a  gas/dwarf2dbg.h
 ba1768a2d3538f62f58b76fc870b474a  gas/ecoff.c
 077dc984642d5b66395d3d85249b2b3a  gas/ecoff.h
-1bc821d0399dae0a77ad71d522a77844  gas/ehopt.c
 62f89aeb49cf28cd661a466f9fdd3919  gas/emul-target.h
 d13c448bddd9d0dc1ffe5888097bcfa7  gas/emul.h
 f79d4ceffae31de00d79c372f2b65bf9  gas/expr.c
@@ -1259,7 +1259,7 @@ ecfefd4ef9c04f3bd2e486e73cc878db  gas/po/rw.po
 3e890a0b3ab0fdf3474873d5627b21f4  gas/po/rw.gmo
 f921f25b46f5eda454485a4af9286c90  gas/po/tr.gmo
 d38e4c9dc972ad516087cf19392d2971  gas/testsuite/config/default.exp
-8fc921fecd46403209a002c09d1e981c  gas/testsuite/ChangeLog
+23bdc615e8e2679ddd94f77693519edb  gas/testsuite/ChangeLog
 8f4c98fe241e3d57b357137c666fd4ba  gas/testsuite/ChangeLog-2004
 444eafe82d4d0b3264a408b1fe8b1d2e  gas/testsuite/ChangeLog-2005
 a89405fc1bad7bc620fc00b28bd62f6c  gas/testsuite/ChangeLog-2006
@@ -3857,7 +3857,7 @@ deb1c801ef639ed932140d2dba02b95b  gas/testsuite/gas/mips/mips-macro-ill-sfp.l
 066c4e7b6705e4be69dee6e1a61e6aa7  gas/testsuite/gas/mips/mips-macro-ill-sfp.s
 9a0679f3fa2f92660a5cb12924e0b843  gas/testsuite/gas/mips/mips-no-jalx.l
 262aacb1cd28ab8a0f73b85c9608e970  gas/testsuite/gas/mips/mips-no-jalx.s
-0382655135964f23baf671b7273da2b9  gas/testsuite/gas/mips/mips.exp
+6116ea7a387caca4c6f1331abf88093e  gas/testsuite/gas/mips/mips.exp
 69fcac4647653e47e7cdb109987121cf  gas/testsuite/gas/mips/mips16-64.d
 8a910bdd6955f163b663eba25217605b  gas/testsuite/gas/mips/mips16-dwarf2-n32.d
 d1849362896f01c1adf09da894f75c5f  gas/testsuite/gas/mips/mips16-dwarf2.d
@@ -4061,6 +4061,9 @@ bd571532865b58cabf0532fd93b135d8  gas/testsuite/gas/mips/vxworks1-el.d
 3e2660b36dd36e1e9b6f89dc54f33109  gas/testsuite/gas/mips/vxworks1-xgot.d
 49d8ecc14ff63470df46a1a1a006e6a8  gas/testsuite/gas/mips/vxworks1.d
 c967b7a1e8670a369febcfcd753e2278  gas/testsuite/gas/mips/vxworks1.s
+5b9be032bfcb7a310ff6dba99146380d  gas/testsuite/gas/mips/mips1-fp.d
+2867b7b4f1e06f673fff3b9f4c1d601e  gas/testsuite/gas/mips/mips1-fp.l
+670af8eb95b87df0e913a4ff9891a9c7  gas/testsuite/gas/mips/mips1-fp.s
 8c4fbc467f6b4539cd2cb9be8da3c582  gas/testsuite/gas/mmix/hex.d
 128cd247dc9b5fc1e4095be0175c68b3  gas/testsuite/gas/mmix/1cjmp1b-n.d
 74c43d2897673eba56f848f3c9e582e9  gas/testsuite/gas/mmix/1cjmp1b-r.d
@@ -5977,8 +5980,8 @@ d908d825fa1d2cd2d060d8ec9c7794d7  ld/ChangeLog-2006
 8958c5b05a66e6b252f6978095132f7c  ld/ChangeLog-9197
 b73f002c7cc445237e97e9ed358922e6  ld/ChangeLog-9899
 d618facc3e8ce8bf3d02ba452e1be6ab  ld/MAINTAINERS
-4e996c19ddfd2cee4718eb5e3f31d1ed  ld/Makefile.am
-d7636d258004bd7de8d8f87cef379a24  ld/Makefile.in
+599dbc69ee73a07f11a8bc0406c0ae29  ld/Makefile.am
+bb1e45a7bc2efbbc64af72472bd50235  ld/Makefile.in
 e954f1ba8a25e139a4ecf0177a95c4de  ld/NEWS
 305f3d03c641bc73c2e6ba871fdfe318  ld/README
 01627b664c7e61ab5dc202bb72913e0a  ld/TODO
@@ -6025,7 +6028,7 @@ e0527531c6d2acacf30abbd5a43c9128  ld/ldver.h
 e0afa136ebca428a02d73634d400123a  ld/lexsup.c
 bcecc8bf83c852461eb6f6293a2c127f  ld/mri.c
 2d7a70e6e87dc5b02179e9914072e159  ld/mri.h
-894114cceeb8987ca06e92f8dbf1ab78  ld/pe-dll.c
+281d5dca5d8adfeb7db55326809729c0  ld/pe-dll.c
 24bcf7b5f997a062e45964f52ac80deb  ld/pe-dll.h
 ef8588556fc0d6274b2a7f7411f65160  ld/pep-dll.c
 480eb6237bd999e46fcace4b4645430b  ld/pep-dll.h
@@ -6188,7 +6191,7 @@ b91a97311385c3c2de493189834d0676  ld/scripttempl/xstormy16.sc
 40b944db8315cb484a442a7e3447da39  ld/scripttempl/z80.sc
 474b1c82cd04327e7433dd108c93e239  ld/scripttempl/z8000.sc
 5f37c4ba4c48fb62bb707eca0c00b661  ld/testsuite/config/default.exp
-f3fb6f22ecf0a5dc75173c14a1b59572  ld/testsuite/ChangeLog
+b8fd6f616aac8c01900479ea5c6488d6  ld/testsuite/ChangeLog
 43821ec3e01aa56c69d031c9cb7aaac6  ld/testsuite/ChangeLog-2004
 0593940197fddd34e72d34ad4681e18d  ld/testsuite/ChangeLog-2005
 13ed49b06cc49649e67f1df2f524946a  ld/testsuite/ChangeLog-2006
@@ -6214,6 +6217,7 @@ d799d7afe5a44a1032c8a7b495b71f3b  ld/testsuite/ld-alpha/tlspic.sd
 fa4f4d2a9aa095262c026d8b386826ce  ld/testsuite/ld-alpha/tlspic.td
 66fa8fd9968bb830ab985fbaf9e9a7b2  ld/testsuite/ld-alpha/tlspic1.s
 1be6d8e1547c710f7bc12028c6522832  ld/testsuite/ld-alpha/tlspic2.s
+aa7513b9ec64663af4a705c1af066e47  ld/testsuite/ld-arm/arm-elf.exp
 9968654653057bdde83f830c1f7755a3  ld/testsuite/ld-arm/arm-app-abs32.d
 565634b571c9c9e088fb3416a62705f0  ld/testsuite/ld-arm/arm-app-abs32.r
 abe5df1b29a8c0085e2b425276030a2b  ld/testsuite/ld-arm/arm-app-abs32.s
@@ -6227,7 +6231,6 @@ d5cb73859953e07807be6d6bcfecd0d9  ld/testsuite/ld-arm/arm-call.d
 1eb65e01cb3f72a9a9f674a0a23bfe43  ld/testsuite/ld-arm/arm-call1.s
 9135ee4b605fc6176c978325ff45c6e9  ld/testsuite/ld-arm/arm-call2.s
 08422e7338327f170663ee64993d2d15  ld/testsuite/ld-arm/arm-dyn.ld
-9f524abb2915abe164cd40a81fcdd222  ld/testsuite/ld-arm/arm-elf.exp
 1481ec66c92fa741fa4612c5bc5b33d6  ld/testsuite/ld-arm/arm-lib-plt32.d
 a167e469316cdd1ed8af41301205f0a0  ld/testsuite/ld-arm/arm-lib-plt32.r
 72d35e1785ba54a876601fb0dbeeab24  ld/testsuite/ld-arm/arm-lib-plt32.s
@@ -6392,6 +6395,8 @@ b2237cabfb8182cf4769e450cb67a95f  ld/testsuite/ld-arm/vxworks1.rd
 165ed1561458c0973255f985be876845  ld/testsuite/ld-arm/vxworks2-static.sd
 e191cf28ec5e3f69a0d89dd051130471  ld/testsuite/ld-arm/vxworks2.s
 7afb4e2fc8be35ad985dcb2e21b7cbef  ld/testsuite/ld-arm/vxworks2.sd
+1a510d271e9f75413c8bdc4c64ac5e5a  ld/testsuite/ld-arm/thumb2-bl-undefweak.d
+ba0a6eb7d3d568f8fe1d9293b5420aea  ld/testsuite/ld-arm/thumb2-bl-undefweak.s
 36694f46c8326776e26979232de2ab01  ld/testsuite/ld-auto-import/auto-import.exp
 870d0c9532413d40575e2e793eaf0f48  ld/testsuite/ld-auto-import/client.c
 bc025b399dc1bf0e5fe050e08b235dff  ld/testsuite/ld-auto-import/dll.c
@@ -8761,13 +8766,16 @@ af6ef4c448967808937e6f2fcd6fa1f0  ld/testsuite/ld-xtensa/tlspic.td
 74dc12cdbe5ac4b2c634e5dc8b770127  ld/testsuite/ld-xtensa/tlspic2.s
 2f4d300c622bfb7444899f021a279fae  ld/testsuite/ld-xtensa/xtensa.exp
 c2ffc8c8d78958ade52fb4757efb7c31  ld/testsuite/lib/ld-lib.exp
-303bfcb49745b0e5c215baa3e838ec32  ld/ChangeLog
+ad7d93108b3f5fa4cad1416f0b2220f7  ld/ChangeLog
 cca300ff00d329ce550f14830aa9e1dd  ld/ld.1
 9c4a0cca6be74361714e3a547f7bed6d  ld/configdoc.texi
 174343e2b48cf513d62e4586516c43b0  ld/ld.info
 fd6b00f11daf5e5650fd128689f3b064  ld/ldgram.c
 90d28d55191b9f0eebb32bb5ae307667  ld/ldgram.h
 717bc6b97e7ee275a941ff92ecd5661c  ld/ldlex.c
+90ca79eb95e07bbb0e4834ada28af642  ld/ChangeLog-2008
+3391be4f995d3a8da3ba9a33e9a04ed3  ld/deffilep.c
+aef9d5440e015f7f562802969aa25f0f  ld/deffilep.h
 bed73a98fd3178ecd9433e0f6a3ed214  libiberty/vsnprintf.c
 a916467b91076e631dd8edb7424769c7  libiberty/COPYING.LIB
 90aff50fda4ce60348a63b3daecca6b9  libiberty/ChangeLog
@@ -8922,7 +8930,7 @@ c377a3ee1f00e7963e3572240b3c9e36  Makefile.in
 fbe2467afef81c41c166173adeb0ee20  mkdep
 64e8ff72710e830f15a347863b848c7d  mkinstalldirs
 a20215c156b06261d944ae7f30a3b75c  move-if-change
-b1fe8bde9666640fd5a3d7bf6c7d824a  opcodes/ChangeLog
+3725f912737a5047d022681c0a5255af  opcodes/ChangeLog
 1b4b8646bdc7ad5a2f9071d8ac8b024e  opcodes/ChangeLog-0001
 83ac14eead5eda1862cc926b82d35cea  opcodes/ChangeLog-0203
 d4cca6dd9882292b6f2e17604bed6cbd  opcodes/ChangeLog-2004
@@ -9055,7 +9063,7 @@ dac53c94af6e76a0d01c681b36453202  opcodes/m32r-opc.c
 b9c537f04116c50ff96c3bb6018fda24  opcodes/m32r-opinst.c
 e9cf6f7e3d7b2fe30060886214c4310b  opcodes/m68hc11-dis.c
 ad9c9708644da65234eefff9c4612b8b  opcodes/m68hc11-opc.c
-df98e1f9eb054585aa8d49850e427ad9  opcodes/m68k-dis.c
+1c0815132b46f5f6141969dce98d97b4  opcodes/m68k-dis.c
 dae7dd85a2570046068493d3315602f7  opcodes/m68k-opc.c
 cfd5f3ab32dee93a9ef1bcfb3fc07e40  opcodes/m88k-dis.c
 d129eed92c6947db4372b285656ef9a1  opcodes/makefile.vms
@@ -9129,7 +9137,7 @@ aa448f84a4250a2a49e802c59d2de4f3  opcodes/or32-dis.c
 7c044dbd081ea712eb68d6fbffe19b00  opcodes/pj-dis.c
 5b71b88cadcb5a40b87df9d7c96a1aff  opcodes/pj-opc.c
 1dbeb625202737009ad1a5b8bed7463c  opcodes/ppc-dis.c
-d168b9afcac0fe2ae4ff51891a0d1eec  opcodes/ppc-opc.c
+b3a8e5efaf195dcedea501b0a2920776  opcodes/ppc-opc.c
 5a13b780c32dedded8a1cb7e0efed557  opcodes/s390-dis.c
 e6994596680f9f334d974420c3e41c5d  opcodes/s390-mkopc.c
 6a1d982f2e1406f6e64090e85019fed4  opcodes/s390-opc.c
