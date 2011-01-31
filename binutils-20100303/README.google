@@ -1,0 +1,617 @@
+Patches applied to binutils-20100303:
+
+Please include a change to this file with each patch, *and* each
+subsequent modification of the patch.  Do NOT combine patch
+checkins, keep them separate.
+
+Append new entries to the end of this file. Each entry shall include:
+ * The list of files modified by the patch,
+ * The status of the patch (whether it's been checked in upstream,
+   or is a local patch),
+ * The local 'owner' responsible for the patch, and
+ * A description of the patch (preferably including bug numbers).
+
+Please include entries for both local patches and for patches which
+have been checked in to (or back-ported from) the upstream sources.
+When checking in changes made upstream, add an entry to this file but
+DO NOT add entries to the GNU ChangeLog files.
+
+gold/arm.cc
+gold/object.cc
+gold/object.h
+gold/target-reloc.h
+gold/testsuite/Makefile.am
+gold/testsuite/Makefile.in
+gold/testsuite/discard_locals_relocatable_test.c
+gold/testsuite/discard_locals_test.sh
+  Status: upstream change
+  Owner: dougkwan
+  Back port patch to fix discarding local symbols.
+  http://sourceware.org/ml/binutils-cvs/2010-03/msg00018.html
+
+gold/arm.cc
+  Status: upstream change
+  Owner: dougkwan
+  Back port patch to fix build breakage and crash in ARM backend.
+  http://sourceware.org/ml/binutils-cvs/2010-03/msg00036.html
+
+gold/fileread.cc
+gold/fileread.h
+gold/options.h
+gold/readsyms.cc
+gold/reloc.cc
+  Status: upstream change
+  Owner: ccoutant
+  Backport patch to support unmapping input files between linker passes.
+  (b/2285439)
+  http://sourceware.org/ml/binutils/2010-03/msg00148.html
+
+ltmain.sh
+  Status: upstream in libtool (commit id 74c8993c178a1386ea5e2363a01d919738402f30)
+  Owner: cgd
+  Sort output of 'find' to ensure deterministic builds.
+
+gold/stringpool.cc
+gold/stringpool.h
+  Status: upstream change
+  Owner: dougkwan
+  Backport patch to make string table independent of implementations of
+  hash table on different hosts.
+  http://sourceware.org/ml/binutils-cvs/2010-03/msg00074.html
+
+gold/archive.cc
+gold/archive.h
+gold/dynobj.cc
+gold/dynobj.h
+gold/gold.cc
+gold/main.cc
+gold/object.cc
+gold/object.h
+gold/options.cc
+gold/options.h
+gold/plugin.cc
+gold/plugin.h
+gold/readsyms.cc
+gold/readsyms.h
+gold/script.cc
+  Status: upstream change
+  Owner: espindola
+  Backport of the --start-lib/--end-lib options:
+  http://sourceware.org/ml/binutils-cvs/2010-03/msg00041.html
+  http://sourceware.org/ml/binutils-cvs/2010-03/msg00115.html
+
+gold/script-sections.cc
+gold/testsuite/Makefile.am
+gold/testsuite/Makefile.in
+  Status: upstream change
+  Owner: aaw
+  Better handling of of orphan TLS sections.  Fixes "load segment overlap"
+  errors.
+  http://sourceware.org/ml/binutils/2010-03/msg00341.html
+
+gold/testsuite/Makefile.am
+gold/testsuite/Makefile.in
+gold/testsuite/script_test_3.t
+  Status: upstream change
+  Owner: aaw
+  Add PT_TLS segment to script_test_3.t.  Otherwise, script_test_3 fails to
+  link if static libraries contain TLS variables.
+  http://sourceware.org/ml/binutils/2010-03/msg00363.html
+
+gold/testsuite/gc_tls_test.cc
+gold/testsuite/gc_tls_test.sh
+  Status: not yet upstream
+  Owner: aaw
+  Rename "number" as "gc_tls_test_marker".  Since libstdc++.a contains
+  "d_number", gc_tls_test was failing when statically linked.  The new
+  name should be less likely to conflict.
+
+gold/arm.cc
+gold/testsuite/Makefile.am
+gold/testsuite/Makefile.in
+gold/testsuite/arm_branch_in_range.sh
+gold/testsuite/thumb_blx_in_range.s
+gold/testsuite/thumb_blx_out_of_range.s
+  Status: upstream change
+  Owner: dougkwan
+  Backport patch to handle BLX offsets correctly.
+  http://sourceware.org/ml/binutils-cvs/2010-03/msg00116.html
+
+gold/testsuite/script_test_4.t
+  Status: not yet upstream
+  Owner: aaw
+  Add .tdata and .tbss sections to script_test_4.t.  Otherwise, tls_script_test
+  segfaults on some build configurations.
+
+gold/arm.cc
+  Status: upstream change
+  Owner: dougkwan
+  Backport patch to fix build breakage of 32-bit build.
+  http://sourceware.org/ml/binutils-cvs/2010-03/msg00145.html
+
+gold/arm.cc
+gold/gold.cc
+gold/options.cc
+gold/options.h
+gold/parameters.cc
+gold/parameters.h
+gold/target.h
+  Status: upstream change
+  Owner: dougkwan
+  Backport patch to fix some kernel build problems.
+  http://sourceware.org/ml/binutils-cvs/2010-04/msg00039.html
+
+gold/gc.h
+gold/i386.cc
+gold/icf.cc
+gold/icf.h
+gold/symtab.cc
+gold/symtab.h
+gold/target-reloc.h
+gold/testsuite/Makefile.am
+gold/testsuite/Makefile.in
+gold/testsuite/icf_preemptible_functions_test.cc
+gold/testsuite/icf_preemptible_functions_test.sh
+gold/testsuite/icf_safe_so_test.cc
+gold/testsuite/icf_safe_so_test.sh
+gold/testsuite/icf_safe_test.cc
+gold/testsuite/icf_safe_test.sh
+gold/testsuite/icf_string_merge_test.cc
+gold/testsuite/icf_string_merge_test.sh
+gold/testsuite/icf_virtual_function_folding_test.cc
+gold/x86_64.cc
+  Status: upstream change
+  Owner: tmsriram
+  This brings in the following upstream patches.
+  http://sourceware.org/ml/binutils/2010-03/msg00061.html
+  http://sourceware.org/ml/binutils/2010-03/msg00141.html
+  http://sourceware.org/ml/binutils/2010-04/msg00257.html
+  http://sourceware.org/ml/binutils/2010-04/msg00386.html 
+
+gold/layout.cc
+  Status: upstream change
+  Owner: ccoutant
+  Backport patch to fix problem with "ld -r" and group sections.
+  http://sourceware.org/ml/binutils/2010-04/msg00394.html
+
+gold/resolve.cc
+gold/symtab.cc
+gold/symtab.h
+gold/testsuite/weak_undef_file1.cc
+gold/testsuite/weak_undef_file2.cc
+gold/testsuite/weak_undef_test.cc
+  Status: upstream change
+  Owner: ccoutant
+  Backport patch to fix problem where gold changes a weak undef to a
+  regular undef when it sees a def in a shared library (b/2778141).
+  http://sourceware.org/ml/binutils/2010-07/msg00086.html
+
+gold/compressed_output.cc
+gold/compressed_output.h
+gold/dwarf_reader.cc
+gold/layout.cc
+gold/layout.h
+gold/merge.cc
+gold/object.cc
+gold/object.h
+gold/output.cc
+gold/reloc.cc
+  Status: upstream change
+  Owner: ccoutant
+  Add gold support for reading compressed debug sections.
+  http://sourceware.org/ml/binutils/2010-07/msg00116.html
+
+gas/read.c
+gas/testsuite/gas/all/gas.exp
+gas/doc/as.texinfo
+  Status: google local
+  Owner: aaw
+  Disable .incbin.
+
+gold/symtab.cc
+  Status: upstream change
+  Owner: jyasskin
+  Have --detect-odr-violations print an object that defines each
+  symbol location.
+  http://sourceware.org/ml/binutils/2010-06/msg00275.html
+
+gold/merge.h
+gold/merge.cc
+  Status: upstream change
+  Owner: ccoutant
+  Improve heap usage for string merge sections.
+  http://sourceware.org/ml/binutils/2010-07/msg00305.html
+
+gold/symtab.cc
+  Status: upstream change
+  Owner: jyasskin
+  Make --detect-odr-violations fail with errors intead of warnings.
+  http://sourceware.org/ml/binutils/2010-07/msg00366.html
+
+gold/arm.cc
+gold/gc.h
+gold/i386.cc
+gold/icf.cc
+gold/icf.h
+gold/int_encoding.h
+gold/powerpc.cc
+gold/sparc.cc
+gold/testsuite/Makefile.am
+gold/testsuite/Makefile.in
+gold/testsuite/icf_sht_rel_addend_test.sh
+gold/testsuite/icf_sht_rel_addend_test_1.cc
+gold/testsuite/icf_sht_rel_addend_test_2.cc
+gold/x86_64.cc
+  Status: upstream change
+  Owner: tmsriram
+  Patch to fix bug b/2842902. Fix submitted upstream and pulled down.
+  Please refer to : 
+  http://sourceware.org/ml/binutils/2010-07/msg00447.html
+  Fix was submitted at CL : 42613-p2
+
+gold/archive.cc
+gold/archive.h
+gold/readsyms.cc
+gold/testsuite/Makefile.am
+gold/testsuite/Makefile.in
+gold/testsuite/start_lib_test_1.c
+gold/testsuite/start_lib_test_2.c
+gold/testsuite/start_lib_test_3.c
+gold/testsuite/start_lib_test_main.c
+  Status: upstream change
+  Owner: nvachhar, ccoutant
+  Backport upstream fix for --start-lib/--end-lib.
+  http://sourceware.org/ml/binutils/2010-08/msg00238.html
+
+gold/symtab.h
+gold/testsuite/Makefile.am
+gold/testsuite/Makefile.in
+  Status: upstream change
+  Owner: ccoutant
+  Backport upstream patch to fix problem with mixed PIC and non-PIC 
+  code when building a position-independent executable. 
+  (Reported by Chrome team.) 
+  http://sourceware.org/ml/binutils/2010-09/msg00165.html 
+
+gold/x86_64.cc
+  Status: upstream change
+  Owner: ccoutant
+  Fix TLS handling where a DTPOFF relocation in a text segment precedes
+  the first TLSLD relocation (because of code rearrangement at -Os).
+  http://b/issue?id=2900661
+  Committed upstream with minor changes:
+  http://sourceware.org/ml/binutils/2010-09/msg00208.html
+
+gold/arm.cc
+gold/options.h
+  Status: upstream
+  Owner: dougkwan
+  Integrate CL 43033-p2 from binutils-2.19-android.
+  Backports upstream patch to implement two ld-compatible options for
+  ARM specific gcc tests.
+  http://sourceware.org/ml/binutils-cvs/2010-08/msg00079.html
+
+gold/arm.cc
+  Status: upstream
+  Owner: dougkwan
+  Integrate CL 39884-p2 from binutils-2.19-android.
+  Backport patch from upstream to fix handling of objects with more
+  than 64K sections.
+  http://sourceware.org/ml/binutils-cvs/2010-04/msg00044.html
+
+gold/arm.cc
+gold/stringpool.cc
+gold/stringpool.h
+  Status: upstream
+  Owner: dougkwan
+  Integrate CL 39315-p2 from binutils-2.19-android.
+  Backport patch from upstream to make stub offsets independent of unordered
+  map implementation.
+  http://sourceware.org/ml/binutils-cvs/2010-03/msg00104.html.
+
+gold/merge.cc
+gold/output.cc
+  Status: upstream
+  Owner: dougkwan
+  Integrate CL 39930-p2 from binutils-2.19-android.
+  Backport upstream patch to fix a problem in handling merge sections
+  of uneven sizes.
+  http://sourceware.org/ml/binutils-cvs/2010-04/msg00047.html
+
+gold/layout.cc
+gold/layout.h
+gold/output.cc
+gold/output.h
+gold/script-c.h
+gold/script-sections.cc
+gold/script-sections.h
+gold/script.cc
+gold/yyscript.y
+  Status: upstream
+  Owner: dougkwan
+  Integrate CL 39985-p2 from binutils-2.19-android.
+  Backport unpstream patch to support building ARM linux kernel.
+  http://sourceware.org/ml/binutils-cvs/2010-04/msg00050.html
+
+gold/arm.cc
+gold/gold.cc
+  Status: upstream
+  Owner: dougkwan
+  Integrate CL 40214-p2 and CL 40240-p2 from binutils-2.19-android.
+  Backport upstream patches to fix linker crash during ARM kernel build.
+  http://sourceware.org/ml/binutils-cvs/2010-04/msg00067.html
+  http://sourceware.org/ml/binutils-cvs/2010-04/msg00078.html
+
+gold/arm.cc
+gold/merge.cc
+gold/merge.h
+gold/object.cc
+gold/output.cc
+gold/output.h
+gold/script-sections.cc
+gold/target-reloc.h
+gold/target.h
+  Status upstream
+  Owner: dougkwan
+  Backport up-stream patches to make gold build ARM Linux kernel
+  correctly.  This CL includes the following patches which are require
+  to build the Linux kernel and modules.
+  http://sourceware.org/ml/binutils-cvs/2010-05/msg00068.html
+  http://sourceware.org/ml/binutils-cvs/2010-05/msg00082.html
+  http://sourceware.org/ml/binutils-cvs/2010-05/msg00104.html
+  http://sourceware.org/ml/binutils-cvs/2010-05/msg00113.html
+
+gold/arm.cc
+  Status: upstream
+  Owner: dougkwan
+  Integrate CL 41477-p2 and CL 41649-p2 from binutils-2.19-android.
+  Backport upstream patches to fix out of stub problem and a
+  kernel build problem.
+  http://sourceware.org/ml/binutils-cvs/2010-06/msg00027.html
+  http://sourceware.org/ml/binutils-cvs/2010-06/msg00084.html
+
+gold/arm.cc
+gold/common.cc
+gold/copy-relocs.cc
+gold/i386.cc
+gold/layout.cc
+gold/layout.h
+gold/output.cc
+gold/output.h
+gold/powerpc.cc
+gold/script-sections.cc
+gold/sparc.cc
+gold/testsuite/Makefile.am
+gold/testsuite/Makefile.in
+gold/testsuite/relro_test.cc
+gold/testsuite/relro_test.sh
+gold/x86_64.cc
+  Status: upstream
+  Owner: ccoutant
+  Backport upstream patches to fix problems with -z relro.
+  http://sourceware.org/ml/binutils/2010-08/msg00010.html
+  http://sourceware.org/ml/binutils/2010-08/msg00039.html
+  http://sourceware.org/ml/binutils/2010-10/msg00242.html
+
+gold/options.h
+  Status: upstream
+  Owner: ccoutant
+  Backport upstream patch to fix -z lazy.
+  http://sourceware.org/ml/binutils/2010-10/msg00180.html
+
+config.sub
+  Status: upstream
+  Owner: dougkwan
+  g4 integrate CL 42170-p2.
+  Backport upstream patch to recognize arm-linux-androideabi target.
+  http://sourceware.org/cgi-bin/cvsweb.cgi/src/config.sub.diff?r1=1.79&r2=1.80&cvsroot=src&f=h
+
+gold/arm-reloc-property.cc
+gold/arm-reloc-property.h
+gold/arm.cc
+gold/icf.h
+gold/output.cc
+gold/output.h
+gold/target.h
+  Status: upstream
+  Owner: dougkwan
+  g4 integrate CL 42316-p2.
+  Backport upstream patches to enhance safe ICF and to fix
+  a linker crash and an EXIDX problem in the Linux kernel.
+  http://www.cygwin.com/ml/binutils-cvs/2010-06/msg00118.html
+  http://www.cygwin.com/ml/binutils-cvs/2010-06/msg00148.html
+  http://www.cygwin.com/ml/binutils-cvs/2010-07/msg00080.html
+
+gold/resolve.cc
+gold/symtab.cc
+gold/testsuite/Makefile.am
+gold/testsuite/Makefile.in
+gold/testsuite/dyn_weak_ref.sh
+gold/testsuite/dyn_weak_ref_1.c
+gold/testsuite/dyn_weak_ref_2.c
+gold/testsuite/strong_ref_weak_def.sh
+gold/testsuite/strong_ref_weak_def_1.c
+gold/testsuite/strong_ref_weak_def_2.c
+  Status: upstream
+  Owner: dougkwan
+  g4 integrate CL 43034-p2 and CL 43484-p2.
+  Backport upstream patches to fix weak symbol handling.
+  http://sourceware.org/ml/binutils-cvs/2010-08/msg00085.html
+  http://sourceware.org/ml/binutils-cvs/2010-08/msg00172.html
+
+gold/arm.cc
+gold/object.cc
+gold/object.h
+gold/testsuite/Makefile.am
+gold/testsuite/Makefile.in
+gold/testsuite/arm_bl_out_of_range.s
+gold/testsuite/arm_branch_out_of_range.sh
+gold/testsuite/arm_cortex_a8.sh
+gold/testsuite/arm_cortex_a8_b.s
+gold/testsuite/arm_cortex_a8_b_cond.s
+gold/testsuite/arm_cortex_a8_b_local.s
+gold/testsuite/arm_cortex_a8_bl.s
+gold/testsuite/arm_cortex_a8_blx.s
+gold/testsuite/arm_cortex_a8_local.s
+gold/testsuite/arm_cortex_a8_local_reloc.s
+gold/testsuite/thumb_bl_out_of_range.s
+gold/testsuite/thumb_bl_out_of_range_local.s
+gold/testsuite/thumb_blx_out_of_range.s
+  Status: upstream
+  Owner: dougkwan
+  g4 integrate CL 43802-p2
+  Backport upstream patch to fix cortex-A8 workaround.
+  http://sourceware.org/ml/binutils-cvs/2010-09/msg00039.html
+
+gold/testsuite/script_test_3.t
+gold/testsuite/script_test_4.t
+gold/testsuite/script_test_5.t
+gold/testsuite/script_test_6.t
+gold/testsuite/script_test_7.t
+  Status: upstream
+  Owner: dougkwan
+  g4 integrate CL 43933-p2
+  Backport upstream fix for test regressions due to broken tests.
+  http://sourceware.org/ml/binutils-cvs/2010-09/msg00087.html
+
+gold/dwarf_reader.cc
+gold/dwarf_reader.h
+gold/reloc.cc
+gold/reloc.h
+  Status: backport
+  Owner: jyasskin
+  Backport upstream fix to teach gold locations of functions not at
+  the start of their sections.
+  http://sourceware.org/ml/binutils/2010-12/msg00022.html
+
+gold/archive.cc
+  Status: backport
+  Owner: ppluzhnikov
+  For http://b/3260308 backport upstream gold fix to warn about archive
+  libraries with wrong architecture.
+  http://sourceware.org/ml/binutils/2010-12/msg00269.html
+
+gold/layout.cc
+gold/layout.h
+gold/object.cc
+gold/options.h
+  Status: backport
+  Owner: ccoutant
+  Backport upstream patch to add --warn-execstack option.
+  http://sourceware.org/ml/binutils/2010-12/msg00362.html
+
+gold/dwarf_reader.h
+gold/dwarf_reader.cc
+  Status: backport
+  Owner: ccoutant
+  Backport upstream patch for problem where consecutive rows in the dwarf
+  line number table describe the same offset.
+  http://sourceware.org/ml/binutils/2010-12/msg00567.html
+
+gold/output.h
+  Status: backport
+  Owner: ccoutant
+  Backport upstream patch for problem where TEXTREL is set incorrectly.
+  http://sourceware.org/ml/binutils/2010-12/msg00617.html
+
+gold/compressed_output.cc
+  Status: backport
+  Owner: dougkwan
+  Backport upstream fix for signature of zlib_decompress so it gold
+  builds on system without zlib.
+  http://sourceware.org/ml/binutils-cvs/2010-07/msg00075.html
+
+gold/copy-relocs.cc
+gold/gold.cc
+gold/icf.cc
+gold/mapfile.cc
+gold/plugin.cc
+  Status: backport
+  Owner: ccoutant
+  Backport upstream patch for file descriptor leakage (b/3125810).
+  http://sourceware.org/ml/binutils/2010-11/msg00138.html
+
+gold/arm.cc
+  Status: backport
+  Owner: dougkwan
+  Backport upstream patch for GOT related test failure.
+  http://sourceware.org/ml/binutils-cvs/2010-10/msg00094.html
+
+gold/layout.cc
+gold/output.cc
+gold/output.h
+  Status: backport
+  Owner: dougkwan
+  Backport upstream patch for RELRO bug that causes test failure on ARM.
+  http://sourceware.org/ml/binutils-cvs/2010-11/msg00101.html
+
+gold/arm.cc
+gold/testsuite/icf_safe_so_test.sh
+gold/testsuite/icf_safe_test.sh
+  Status: backport
+  Owner: dougkwan
+  g4 integrate CL 43977-p2 to backport upstream fix for ARM gold testsuite
+  failures.
+
+gold/arm.cc
+gold/layout.cc
+gold/target.h
+  Status: backport
+  Owner: dougkwan
+  Backport upstream patch for file descriptor leakage in ARM back-end.
+  (b/3125810).
+  http://sourceware.org/ml/binutils-cvs/2010-11/msg00060.html
+
+Makefile.def
+Makefile.in
+configure
+configure.ac
+gold/Makefile.am
+gold/Makefile.in
+gold/configure
+gold/configure.ac
+ld/Makefile.am
+ld/Makefile.in
+ld/configure
+ld/configure.in
+  Status: upstream
+  Owner: dougkwan
+  g4 integrate CL 41370-p2
+  Backport upstream patches to support dual-linker configuration.
+  http://sourceware.org/ml/binutils-cvs/2010-04/msg00138.html
+  http://sourceware.org/ml/binutils-cvs/2010-04/msg00142.html
+
+gold/i386.cc
+gold/icf.cc
+gold/target.h
+gold/x86_64.cc
+  Status: backport
+  Owner: dougkwan
+  g4 integrate CL 44157-p2 to backport upstream fix for an ICF bug involving
+  sections referencing merged strings.
+
+gold/options.h
+  Status: backport
+  Owner: ppluzhnikov
+  Backport upstream patch:
+  http://sourceware.org/ml/binutils/2011-01/msg00341.html
+  to add support for --no-detect-odr-violations
+
+gold/icf.cc
+  Status: backport
+  Owner: dougkwan
+  Backport upstream fix for ICF crash. (b/3384375)
+  http://sources.redhat.com/ml/binutils-cvs/2011-01/msg00140.html
+
+gold/arm.cc
+gold/i386.cc
+gold/powerpc.cc
+gold/sparc.cc
+gold/symtab.h
+gold/x86_64.cc
+  Status: backport
+  Owner: dougkwan
+  Backport upstream fix for gcc regression g++.dg/warn/weak1.C.
+  http://sourceware.org/ml/binutils-cvs/2010-11/msg00072.html
+  http://sourceware.org/ml/binutils-cvs/2010-12/msg00060.html
+  Note that IFUNC and R_X86_64_GNU_VT* related code is not included.

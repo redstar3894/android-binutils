@@ -1,0 +1,163 @@
+Patches applied to binutils-2.20.1-mobile:
+
+Please include a change to this file with each patch, *and* each
+subsequent modification of the patch.  Do NOT combine patch
+checkins, keep them separate.
+
+Append new entries to the end of this file. Each entry shall include:
+ * The list of files modified by the patch,
+ * The status of the patch (whether it's been checked in upstream,
+   or is a local patch),
+ * The local 'owner' responsible for the patch, and
+ * A description of the patch (preferably including bug numbers).
+
+Please include entries for both local patches and for patches which
+have been checked in to (or back-ported from) the upstream sources.
+When checking in changes made upstream, add an entry to this file but
+DO NOT add entries to the GNU ChangeLog files.
+
+Makefile.def
+Makefile.in
+configure
+configure.ac
+gold/Makefile.am
+gold/Makefile.in
+gold/configure
+gold/configure.ac
+ld/Makefile.am
+ld/Makefile.in
+ld/configure
+ld/configure.in
+  Status: In upstream.
+  Owner: raymes
+  Integrate CL 41370-p2 to add dual linker configuration support.
+
+gold/*
+elfcpp/*
+  Stauts: In upstream.
+  Owner: dougkwan
+  Manually copy gold and elfcpp from binutils-2.19-android@43034 to
+  binutils-2.20.1.
+
+gold/i386.cc
+gold/x86_64.cc
+  Status: In upstream.
+  Owner: dougkwan
+  g4 integrate CL 43279-p2 to fix gold testsuite failure.
+
+bfd/elf32-arm.c
+ld/testsuite/ld-arm/arm-elf.exp
+ld/testsuite/ld-arm/cortex-a8-fix-bl-rel-plt.d
+ld/testsuite/ld-arm/cortex-a8-fix-blx-bcond.d
+ld/testsuite/ld-arm/cortex-a8-fix-blx-bcond.s
+  Status: In upstream.
+  Owner: dougkwan
+  g4 integrate CL 43831-p2 to fix cortex-a8 workaround bug.
+
+gas/expr.c
+  Status: In upstream.
+  Owner: dougkwan
+  g4 integrate CL 44408-p2 to fix assembly for LIPO.
+
+gas/config/tc-arm.c
+gas/testsuite/gas/arm/barrier-bad-thumb.d
+gas/testsuite/gas/arm/barrier-bad-thumb.l
+gas/testsuite/gas/arm/barrier-bad-thumb.s
+gas/testsuite/gas/arm/barrier-bad.d
+gas/testsuite/gas/arm/barrier-bad.l
+gas/testsuite/gas/arm/barrier-bad.s
+gas/testsuite/gas/arm/barrier-thumb.d
+gas/testsuite/gas/arm/barrier-thumb.s
+gas/testsuite/gas/arm/barrier.d
+gas/testsuite/gas/arm/barrier.s
+opcodes/arm-dis.c
+  Status: In upstream.
+  Owner: dougkwan
+  g4 integrate CL 43817-p2 from binutils-2.19-android.
+
+ld/emultempl/armelf.em
+  Stauts: Local
+  Owner: dougkwan
+  g4 integrate CL 41851-p2 to implement dummy --icf option in ld.
+
+config.sub
+  Status: In upstream.
+  Owner: dougkwan
+  g4 integrate CL 42170-p2 to support arm-linux-androideabi target
+
+bfd/bfd-in2.h
+bfd/elf32-arm.c
+bfd/libbfd.h
+bfd/reloc.c
+gas/config/tc-arm.c
+gas/doc/c-arm.texi
+gas/testsuite/gas/arm/got_prel.d
+gas/testsuite/gas/arm/got_prel.s
+  Status: In upstream.
+  Owner: dougkwan
+  g4 integrate 39345-p2 for R_ARM_GOT_PREL support.
+
+gold/merge.cc
+gold/merge.h
+  Status: In upstream.
+  Owner: dougkwan
+  g4 integrate 42476-p2 to avoid out-of-memory when linking a large object.
+
+gold/resolve.cc
+gold/testsuite/Makefile.am
+gold/testsuite/Makefile.in
+gold/testsuite/dyn_weak_ref.sh
+gold/testsuite/dyn_weak_ref_1.c
+gold/testsuite/dyn_weak_ref_2.c
+  Status: In upstream.
+  Owner: dougkwan
+  g4 integrate CL 43484-p2 to fix dynamic weak reference bug.
+
+gold/arm.cc
+gold/testsuite/icf_safe_so_test.sh
+gold/testsuite/icf_safe_test.sh
+gold/testsuite/script_test_3.t
+gold/testsuite/script_test_4.t
+gold/testsuite/script_test_5.t
+gold/testsuite/script_test_6.t
+gold/testsuite/script_test_7.t
+  Status: In upstream.
+  Owner: dougkwan
+  g4 integrate 43933-p2 and 43977-p2 to fix GOT-using relocation and
+  gold test regressions.
+
+gold/arm.cc
+gold/object.cc
+gold/object.h
+gold/testsuite/Makefile.am
+gold/testsuite/Makefile.in
+gold/testsuite/arm_bl_out_of_range.s
+gold/testsuite/arm_branch_out_of_range.sh
+gold/testsuite/arm_cortex_a8.sh
+gold/testsuite/arm_cortex_a8_b.s
+gold/testsuite/arm_cortex_a8_b_cond.s
+gold/testsuite/arm_cortex_a8_b_local.s
+gold/testsuite/arm_cortex_a8_bl.s
+gold/testsuite/arm_cortex_a8_blx.s
+gold/testsuite/arm_cortex_a8_local.s
+gold/testsuite/arm_cortex_a8_local_reloc.s
+gold/testsuite/thumb_bl_out_of_range.s
+gold/testsuite/thumb_bl_out_of_range_local.s
+gold/testsuite/thumb_blx_out_of_range.s
+  Status: In upstream.
+  Owner: dougkwan
+  g4 integrate CL 43802-p2 to fix cortex-A8 bug in linker.
+
+gold/i386.cc
+gold/icf.cc
+gold/target.h
+gold/x86_64.cc
+  Status: In upstream.
+  Owner: dougkwan
+  g4 integrate CL 44157-p2 to fix ICF merge section bug.
+
+gas/config/tc-arm.c
+  Status: In upstream
+  Owner: jingyu
+  Fix neon register alias case sensitivity.
+  http://sourceware.org/ml/binutils/2010-08/msg00330.html
