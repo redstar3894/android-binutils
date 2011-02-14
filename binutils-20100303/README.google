@@ -615,3 +615,12 @@ gold/x86_64.cc
   http://sourceware.org/ml/binutils-cvs/2010-11/msg00072.html
   http://sourceware.org/ml/binutils-cvs/2010-12/msg00060.html
   Note that IFUNC and R_X86_64_GNU_VT* related code is not included.
+
+gold/icf.cc
+gold/icf.h
+  Status: In upstream.
+  Owner: dougkwan
+  g4 integrate CL 47770-p2
+  Fix dangling pointer bug caused by calling c_str method of temporary
+  string object.
+  http://cygwin.com/ml/binutils/2011-02/msg00030.html 
