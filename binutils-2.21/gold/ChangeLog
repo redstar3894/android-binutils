@@ -1,3 +1,41 @@
+2011-03-02  Simon Baldwin  <simonb@google.com>
+
+	* configure.ac: Add check for gnu_indirect_function support in
+	the toolchain building binutils.
+	* configure: Rebuild.
+
+2011-03-01  Ian Lance Taylor  <iant@google.com>
+
+	Backport from mainline:
+	2011-01-04  Cary Coutant  <ccoutant@google.com>
+	* script-sections.cc (Sort_output_sections::operator()): Sort TLS
+	sections before NOBITS sections.
+
+2011-02-27  Ian Lance Taylor  <iant@google.com>
+
+	Backport from mainline:
+	2010-11-05  Cary Coutant  <ccoutant@google.com>
+	PR gold/10708
+	* copy-relocs.cc (Copy_relocs::emit_copy_reloc): Hold a lock on the
+	object when reading from the file.
+	* gold.cc (queue_middle_tasks): Hold a lock on the object when doing
+	second layout pass.
+	* icf.cc (preprocess_for_unique_sections): Hold a lock on the object
+	when reading section contents.
+	(get_section_contents): Likewise.
+	(icf::find_identical_sections): Likewise.
+	* mapfile.cc (Mapfile::print_discarded_sections): Hold a lock on the
+	object when reading from the file.
+	* plugin.cc (Plugin_manager::layout_deferred_objects): Hold a lock on
+	the object when doing deferred section layout.
+
+2011-02-09  Ian Lance Taylor  <iant@google.com>
+
+	PR gold/12316
+	* object.h (class Sized_relobj): Remove clear_local_symbols.
+	* reloc.cc (Sized_relobj::do_relocate): Don't call
+	clear_local_symbols.
+
 2011-02-04  Jeffrey Yasskin  <jyasskin@google.com>
 
 	* symtab.cc (Odr_violation_compare::operator()): Sort by just the
