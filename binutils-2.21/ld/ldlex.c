@@ -1,5 +1,5 @@
 
-#line 3 "../../../build/../binutils/binutils-2.21/ld/ldlex.c"
+#line 3 "ldlex.c"
 
 #define  YY_INT_ALIGNED short int
 
