@@ -1,3 +1,49 @@
+2011-03-26  John Marino  <binutils@marino.st>
+
+	* configure.tgt: Fix support for *-*-dragonfly*.
+	* config/tc-i386.c: define SVR4_COMMENT_CHARS for dragonfly.
+	* config/te-dragonfly.h: New file.
+
+2010-11-25  Andreas Krebbel  <Andreas.Krebbel@de.ibm.com>
+
+	* config/tc-s390.c (current_cpu): Initialize with latest CPU.
+	(init_default_arch): Default to z/Architecture mode if CPU provides it.
+	Remove the check setting the CPU default.
+
+2011-03-19  Alan Modra  <amodra@gmail.com>
+
+	PR gas/6957
+	* config/tc-i386.c (i386_align_code): Use f32_patt when tuning
+	for i686.
+
+2011-02-08  H.J. Lu  <hongjiu.lu@intel.com>
+
+	* config/tc-ppc.c (md_show_usage): Remove -l and -b.  Add -K PIC.
+	* doc/as.texinfo (Overview <Target PowerPC options>): Add a number
+	of missing options.
+	* doc/c-ppc.texi: Likewise.
+
+2011-03-18  Alan Modra  <amodra@gmail.com>
+
+	* config/obj-elf.c (elf_frob_symbol): Report S_SET_SIZE symbol
+	on .size expression errors rather than symbols in the size expression.
+
+	Backport 2011-03-16  H.J. Lu  <hongjiu.lu@intel.com>
+	* as.c (show_usage): Add --size-check=.
+	(parse_args): Add and handle OPTION_SIZE_CHECK.
+	* as.h (flag_size_check): New.
+	* config/obj-elf.c (elf_frob_symbol): Use as_bad to report
+	bad .size directive only for --size-check=error.
+	* doc/as.texinfo: Document --size-check=.
+
+2011-03-17  Alan Modra  <amodra@gmail.com>
+
+	PR 12569
+	* expr.c (operand): Correct passing of "mode" to expr.
+	* read.c (do_org): Allow expr_section.
+	(get_known_segmented_expression): Don't assert anything about the
+	segment.
+
 2011-03-14  John David Anglin  <dave.anglin@nrc-cnrc.gc.ca>
 
 	Backport from mainline:
