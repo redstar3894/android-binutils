@@ -3317,8 +3317,9 @@ ppc64_elf_get_synthetic_symtab (bfd *abfd,
 		{
 		  if (sec->vma > ent)
 		    break;
-		  if ((sec->flags & SEC_ALLOC) == 0
-		      || (sec->flags & SEC_LOAD) == 0)
+		  /* SEC_LOAD may not be set if SEC is from a separate debug
+		     info file.  */
+		  if ((sec->flags & SEC_ALLOC) == 0)
 		    break;
 		  if ((sec->flags & SEC_CODE) != 0)
 		    s->section = sec;
@@ -9788,6 +9789,8 @@ ppc_build_one_stub (struct bfd_hash_entry *gen_entry, void *in_arg)
 	     these checks could now disappear.  */
 	  if (fh->elf.root.type == bfd_link_hash_undefined)
 	    fh->elf.root.type = bfd_link_hash_undefweak;
+	  /* Stop undo_symbol_twiddle changing it back to undefined.  */
+	  fh->was_undefined = 0;
 	}
 
       /* Now build the stub.  */
